@@ -591,7 +591,7 @@
     const SUPABASE_URL = 'https://uuawbivebnknxnegrolu.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1YXdiaXZlYm5rbnhuZWdyb2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwOTg5MTksImV4cCI6MjA4NTY3NDkxOX0.T5RCoPZSGuyRSxon-LNWAgefXf_WWN8VN4tBoIzwprQ';
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ============================================
     // LEISTUNGSTABELLEN
@@ -972,7 +972,7 @@
     async function loadParticipants() {
       try {
         setStatus('loading', 'Lade Daten...');
-        const { data, error } = await supabase
+        const { data, error } = await db
           .from('participants')
           .select('*')
           .order('name');
@@ -992,7 +992,7 @@
       showLoading();
       try {
         if (participant.id) {
-          const { error } = await supabase
+          const { error } = await db
             .from('participants')
             .update({
               name: participant.name,
@@ -1003,7 +1003,7 @@
             .eq('id', participant.id);
           if (error) throw error;
         } else {
-          const { error } = await supabase
+          const { error } = await db
             .from('participants')
             .insert({
               name: participant.name,
@@ -1026,7 +1026,7 @@
       
       showLoading();
       try {
-        const { error } = await supabase
+        const { error } = await db
           .from('participants')
           .delete()
           .eq('id', id);
@@ -1042,7 +1042,7 @@
     async function importParticipantsToDb(dataToImport) {
       showLoading();
       try {
-        const { error } = await supabase
+        const { error } = await db
           .from('participants')
           .insert(dataToImport.map(p => ({
             name: p.name,
