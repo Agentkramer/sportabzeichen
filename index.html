@@ -971,25 +971,24 @@
     // ============================================
     // SUPABASE OPERATIONS
     // ============================================
-    async function loadParticipants() {
-      try {
-        setStatus('loading', 'Lade Daten...');
-        const { data, error } = await db
-          .from('participants')
-          .select('*')
-          .order('name');
-        
-        if (error) throw error;
-        
-        participants = data || [];
-        setStatus('online', `${participants.length} Teilnehmer geladen`);
-        renderList();
-      } catch (err) {
-        console.error('Fehler beim Laden:', err);
-        setStatus('offline', 'Verbindung fehlgeschlagen');
-      }
-    }
-
+  async function loadParticipants() {
+  try {
+    setStatus('loading', 'Lade Daten...');
+    const { data, error } = await db
+      .from('participants')
+      .select('*')
+      .order('last_name', { ascending: true });
+    
+    if (error) throw error;
+    
+    participants = data || [];
+    setStatus('online', `${participants.length} Teilnehmer geladen`);
+    renderList();
+  } catch (err) {
+    console.error('Fehler beim Laden:', err);
+    setStatus('offline', 'Verbindung fehlgeschlagen');
+  }
+}
    async function saveParticipantToDb(participant) {
   showLoading();
   try {
