@@ -532,7 +532,8 @@
 
       <div class="form-section">
         <h3>👤 Stammdaten</h3>
-        <input type="text" id="nameInput" placeholder="Name" autocomplete="off">
+        <input type="text" id="firstNameInput" placeholder="Vorname" autocomplete="off">
+        <input type="text" id="lastNameInput" placeholder="Nachname" autocomplete="off">
         <div class="input-row">
           <input type="number" id="ageInput" placeholder="Alter" min="10" max="17" inputmode="numeric">
           <select id="genderInput">
@@ -558,7 +559,7 @@
       </div>
 
       <div class="import-section">
-        <p>Lade eine CSV-Datei mit Teilnehmern hoch.<br>Format: Name;Alter;Geschlecht</p>
+       <p>Lade eine CSV-Datei mit Teilnehmern hoch.<br>Format: Vorname;Nachname;Alter;Geschlecht</p>
         <input type="file" id="fileInput" class="file-input" accept=".csv,.txt">
         <button id="selectFileBtn" class="btn btn-secondary">Datei auswählen</button>
       </div>
@@ -952,7 +953,8 @@
     const cancelBtn = document.getElementById('cancelBtn');
     const saveBtn = document.getElementById('saveBtn');
     const formTitle = document.getElementById('formTitle');
-    const nameInput = document.getElementById('nameInput');
+    const firstNameInput = document.getElementById('firstNameInput');
+    const lastNameInput = document.getElementById('lastNameInput');
     const ageInput = document.getElementById('ageInput');
     const genderInput = document.getElementById('genderInput');
     const disciplinesForms = document.getElementById('disciplinesForms');
@@ -988,38 +990,42 @@
       }
     }
 
-    async function saveParticipantToDb(participant) {
-      showLoading();
-      try {
-        if (participant.id) {
-          const { error } = await db
-            .from('participants')
-            .update({
-              name: participant.name,
-              age: participant.age,
-              gender: participant.gender,
-              results: participant.results
-            })
-            .eq('id', participant.id);
-          if (error) throw error;
-        } else {
-          const { error } = await db
-            .from('participants')
-            .insert({
-              name: participant.name,
-              age: participant.age,
-              gender: participant.gender,
-              results: participant.results || {}
-            });
-          if (error) throw error;
-        }
-        await loadParticipants();
-      } catch (err) {
-        console.error('Fehler beim Speichern:', err);
-        alert('Fehler beim Speichern: ' + err.message);
-      }
-      hideLoading();
+   async function saveParticipantToDb(participant) {
+  showLoading();
+  try {
+    if (participant.id) {
+      // UPDATE bestehender Teilnehmer
+      const { error } = await db
+        .from('participants')
+        .update({
+          first_name: participant.first_name,
+          last_name: participant.last_name,
+          age: participant.age,
+          gender: participant.gender,
+          results: participant.results
+        })
+        .eq('id', participant.id);
+      if (error) throw error;
+    } else {
+      // INSERT neuer Teilnehmer
+      const { error } = await db
+        .from('participants')
+        .insert({
+          first_name: participant.first_name,
+          last_name: participant.last_name,
+          age: participant.age,
+          gender: participant.gender,
+          results: participant.results || {}
+        });
+      if (error) throw error;
     }
+    await loadParticipants();
+  } catch (err) {
+    console.error('Fehler beim Speichern:', err);
+    alert('Fehler beim Speichern: ' + err.message);
+  }
+  hideLoading();
+}
 
     async function deleteParticipantFromDb(id) {
       if (!confirm('Teilnehmer wirklich löschen?')) return;
@@ -1045,7 +1051,8 @@
         const { error } = await db
           .from('participants')
           .insert(dataToImport.map(p => ({
-            name: p.name,
+            first_name: p.first_name,
+            last_name: p.last_name,
             age: p.age,
             gender: p.gender,
             results: {}
@@ -1085,7 +1092,7 @@
             <div class="card" data-id="${p.id}">
               <div class="card-header">
                 <div>
-                  <div class="card-name">${p.name}</div>
+                  <div class="card-name">${p.first_name} ${p.last_name}</div>
                   <div class="card-meta">${p.age} Jahre, ${p.gender}</div>
                 </div>
                 ${medalBadge}
@@ -1281,9 +1288,9 @@
       resetForm();
     }
 
-    function resetForm() {
-      nameInput.value = '';
-      ageInput.value = '';
+   function resetForm() {
+      firstNameInput.value = '';
+      lastNameInput.value = '';
       genderInput.value = 'weiblich';
       editingId = null;
       disciplinesForms.innerHTML = '';
@@ -1305,18 +1312,19 @@
         }
       });
       
-      return {
-        id: editingId,
-        name: nameInput.value.trim(),
-        age: parseInt(ageInput.value),
-        gender: genderInput.value,
-        results
-      };
+        return {
+            id: editingId,
+            first_name: firstNameInput.value.trim(),
+            last_name: lastNameInput.value.trim(),
+            age: parseInt(ageInput.value),
+            gender: genderInput.value,
+            results
+        };
     }
 
     function loadParticipantToForm(participant) {
-      nameInput.value = participant.name;
-      ageInput.value = participant.age;
+      firstNameInput.value = participant.first_name || '';
+      lastNameInput.value = participant.last_name || '';
       genderInput.value = participant.gender;
       editingId = participant.id;
       
@@ -1347,15 +1355,10 @@
     async function handleSave() {
       const data = collectFormData();
       
-      if (!data.name) {
-        alert('Bitte Name eingeben');
+      if (!data.first_name || !data.last_name) {
+        alert('Bitte Vor- und Nachname eingeben');
         return;
-      }
-      
-      if (!data.age || data.age < 10 || data.age > 17) {
-        alert('Bitte Alter eingeben (10-17 Jahre)');
-        return;
-      }
+    }
       
       await saveParticipantToDb(data);
       hideForm();
@@ -1381,38 +1384,51 @@
       importData = [];
     }
 
-    function parseCSV(content) {
-      const lines = content.split('\n').filter(l => l.trim());
-      const results = [];
-      
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        // Versuche verschiedene Trennzeichen
-        let parts = line.includes(';') ? line.split(';') : line.split(',');
-        parts = parts.map(p => p.trim().replace(/^["']|["']$/g, ''));
-        
-        if (parts.length >= 3) {
-          const name = parts[0];
-          const age = parseInt(parts[1]);
-          let gender = parts[2].toLowerCase();
-          
-          // Geschlecht normalisieren
-          if (gender === 'w' || gender === 'weiblich' || gender === 'f' || gender === 'female') {
-            gender = 'weiblich';
-          } else if (gender === 'm' || gender === 'männlich' || gender === 'maennlich' || gender === 'male') {
-            gender = 'maennlich';
-          } else {
-            continue; // Ungültige Zeile überspringen
-          }
-          
-          if (name && age >= 10 && age <= 17) {
-            results.push({ name, age, gender });
-          }
-        }
-      }
-      
-      return results;
+function parseCSV(content) {
+  const lines = content.split('\n').filter(l => l.trim());
+  const results = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Versuche verschiedene Trennzeichen
+    let parts = line.includes(';') ? line.split(';') : line.split(',');
+    parts = parts.map(p => p.trim().replace(/^["']|["']$/g, ''));
+    
+    let firstName, lastName, age, gender;
+    
+    if (parts.length >= 4 && !isNaN(parseInt(parts[2]))) {
+      // Neues Format: Vorname;Nachname;Alter;Geschlecht
+      firstName = parts[0];
+      lastName = parts[1];
+      age = parseInt(parts[2]);
+      gender = parts[3].toLowerCase();
+    } else if (parts.length >= 3) {
+      // Altes Format: Name;Alter;Geschlecht (Name aufteilen)
+      const nameParts = parts[0].split(' ');
+      firstName = nameParts[0] || '';
+      lastName = nameParts.slice(1).join(' ') || '';
+      age = parseInt(parts[1]);
+      gender = parts[2].toLowerCase();
+    } else {
+      continue; // Ungültige Zeile überspringen
     }
+    
+    // Geschlecht normalisieren
+    if (gender === 'w' || gender === 'weiblich' || gender === 'f' || gender === 'female') {
+      gender = 'weiblich';
+    } else if (gender === 'm' || gender === 'männlich' || gender === 'maennlich' || gender === 'male') {
+      gender = 'maennlich';
+    } else {
+      continue; // Ungültige Zeile überspringen
+    }
+    
+    if (firstName && age >= 10 && age <= 17) {
+      results.push({ first_name: firstName, last_name: lastName, age, gender });
+    }
+  }
+  
+  return results;
+}
 
     function handleFileSelect(event) {
       const file = event.target.files[0];
@@ -1433,7 +1449,7 @@
         previewContent.innerHTML = `
           <p style="color: #22c55e; margin-bottom: 0.5rem;">${importData.length} Teilnehmer erkannt:</p>
           <div style="max-height: 200px; overflow-y: auto;">
-            ${importData.map(p => `<div style="font-size: 0.85rem; padding: 0.25rem 0;">${p.name} (${p.age}J, ${p.gender})</div>`).join('')}
+            ${importData.map(p => `<div style="font-size: 0.85rem; padding: 0.25rem 0;">${p.first_name} ${p.last_name} (${p.age}J, ${p.gender})</div>`).join('')}
           </div>
         `;
         importPreview.classList.remove('hidden');
@@ -1446,14 +1462,15 @@
     // CSV EXPORT
     // ============================================
     function exportCSV() {
-      const headers = ['Name', 'Alter', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
+      const headers = ['Vorname', 'Nachname', 'Alter', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
       
       const rows = participants.map(p => {
         const points = getParticipantPoints(p);
         const result = calculateOverallResult(points);
         
         return [
-          p.name,
+          p.first_name,
+          p.lasr_name,
           p.age,
           p.gender,
           points.ausdauer || 0,
