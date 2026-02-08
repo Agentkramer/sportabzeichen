@@ -1028,6 +1028,7 @@ function populateBirthYearDropdown() {
           last_name: participant.last_name,
           birth_year: participant.birth_year,
           gender: participant.gender,
+          external_id: participant.external_id || null,
           results: participant.results
         })
         .eq('id', participant.id);
@@ -1041,6 +1042,7 @@ function populateBirthYearDropdown() {
           last_name: participant.last_name,
           birth_year: participant.birth_year,
           gender: participant.gender,
+          external_id: participant.external_id || null,
           results: participant.results || {}
         });
       if (error) throw error;
@@ -1071,19 +1073,46 @@ function populateBirthYearDropdown() {
       hideLoading();
     }
 
-   async function importParticipantsToDb(dataToImport) {
+async function importParticipantsToDb(dataToImport) {
   showLoading();
   try {
-    const { error } = await db
-      .from('participants')
-      .insert(dataToImport.map(p => ({
-        first_name: p.first_name,
-        last_name: p.last_name,
-        birth_year: p.birth_year,  // ✅ GEÄNDERT
-        gender: p.gender,
-        results: {}
-      })));
-    if (error) throw error;
+    for (const p of dataToImport) {
+      // Check ob Teilnehmer mit external_id schon existiert
+      if (p.external_id) {
+        const { data: existing } = await db
+          .from('participants')
+          .select('id')
+          .eq('external_id', p.external_id)
+          .maybeSingle();
+        
+        if (existing) {
+          // UPDATE bestehender Teilnehmer (aber nicht die results!)
+          await db
+            .from('participants')
+            .update({
+              first_name: p.first_name,
+              last_name: p.last_name,
+              birth_year: p.birth_year,
+              gender: p.gender
+            })
+            .eq('id', existing.id);
+          continue;
+        }
+      }
+      
+      // INSERT neuer Teilnehmer
+      await db
+        .from('participants')
+        .insert({
+          external_id: p.external_id || null,
+          first_name: p.first_name,
+          last_name: p.last_name,
+          birth_year: p.birth_year,
+          gender: p.gender,
+          results: {}
+        });
+    }
+    
     await loadParticipants();
     hideImport();
   } catch (err) {
@@ -1428,9 +1457,10 @@ function renderDisciplineForms() {
       importData = [];
     }
 
-function parseCSV(content) {
+ffunction parseCSV(content) {
   const lines = content.split('\n').filter(l => l.trim());
   const results = [];
+  const currentYear = new Date().getFullYear();
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -1438,21 +1468,30 @@ function parseCSV(content) {
     let parts = line.includes(';') ? line.split(';') : line.split(',');
     parts = parts.map(p => p.trim().replace(/^["']|["']$/g, ''));
     
-    let firstName, lastName, birthYear, gender;
+    let firstName, lastName, birthYear, gender, externalId;
     
-    if (parts.length >= 4 && !isNaN(parseInt(parts[2]))) {
-      // Format: Vorname;Nachname;Geburtsjahr;Geschlecht
+    if (parts.length >= 5 && !isNaN(parseInt(parts[3]))) {
+      // Format: external_id;Vorname;Nachname;Geburtsjahr;Geschlecht
+      externalId = parts[0];
+      firstName = parts[1];
+      lastName = parts[2];
+      birthYear = parseInt(parts[3]);
+      gender = parts[4].toLowerCase();
+    } else if (parts.length >= 4 && !isNaN(parseInt(parts[2]))) {
+      // Format ohne external_id: Vorname;Nachname;Geburtsjahr;Geschlecht
       firstName = parts[0];
       lastName = parts[1];
       birthYear = parseInt(parts[2]);
       gender = parts[3].toLowerCase();
+      externalId = null;
     } else if (parts.length >= 3) {
-      // Format: Name;Geburtsjahr;Geschlecht (Name aufteilen)
+      // Altes Format: Name;Geburtsjahr;Geschlecht (Name aufteilen)
       const nameParts = parts[0].split(' ');
       firstName = nameParts[0] || '';
       lastName = nameParts.slice(1).join(' ') || '';
       birthYear = parseInt(parts[1]);
       gender = parts[2].toLowerCase();
+      externalId = null;
     } else {
       continue; // Ungültige Zeile überspringen
     }
@@ -1467,16 +1506,19 @@ function parseCSV(content) {
     }
     
     // Geburtsjahr validieren (zwischen 2006 und 2016 für 10-18 Jährige)
-    const currentYear = new Date().getFullYear();
     if (firstName && birthYear >= currentYear - 18 && birthYear <= currentYear - 10) {
       results.push({ 
+        external_id: externalId,
         first_name: firstName, 
         last_name: lastName, 
-        birth_year: birthYear,  // ✅ Geburtsjahr direkt
+        birth_year: birthYear,
         gender 
       });
     }
   }
+  
+  return results;
+}
   
   return results;
 }
@@ -1515,7 +1557,7 @@ function parseCSV(content) {
     // CSV EXPORT
     // ============================================
     function exportCSV() {
-      const headers = ['Vorname', 'Nachname', 'Alter', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
+      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
       
       const rows = participants.map(p => {
         const age = calculateAgeForYear(p.birth_year);
@@ -1523,9 +1565,10 @@ function parseCSV(content) {
         const result = calculateOverallResult(points);
         
         return [
+          p.external_id || ''
           p.first_name,
           p.last_name,
-          age,
+          p.birth_year,
           p.gender,
           points.ausdauer || 0,
           points.kraft || 0,
