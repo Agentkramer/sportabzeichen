@@ -493,8 +493,8 @@
         </div>
       </div>
       <div class="header-actions" id="headerActions">
-        <button id="importBtn" class="btn btn-secondary btn-icon" title="CSV Import">📤</button>
-        <button id="exportBtn" class="btn btn-success btn-icon" title="CSV Export">📥</button>
+        <button id="importBtn" class="btn btn-secondary btn-icon" title="CSV Import">📥</button>
+        <button id="exportBtn" class="btn btn-success btn-icon" title="CSV Export">💾</button>
       </div>
     </div>
   </header>
@@ -1075,8 +1075,17 @@ function populateBirthYearDropdown() {
 
 async function importParticipantsToDb(dataToImport) {
   showLoading();
+  
+  // Loading-Overlay für Progress nutzen
+  const loadingText = document.getElementById('loadingOverlay').querySelector('div');
+  
   try {
+    let imported = 0;
+    
     for (const p of dataToImport) {
+      // Progress anzeigen
+      loadingText.textContent = `Importiere ${imported + 1} / ${dataToImport.length}...`;
+      
       // Check ob Teilnehmer mit external_id schon existiert
       if (p.external_id) {
         const { data: existing } = await db
@@ -1086,7 +1095,7 @@ async function importParticipantsToDb(dataToImport) {
           .maybeSingle();
         
         if (existing) {
-          // UPDATE bestehender Teilnehmer (aber nicht die results!)
+          // UPDATE bestehender Teilnehmer
           await db
             .from('participants')
             .update({
@@ -1096,6 +1105,7 @@ async function importParticipantsToDb(dataToImport) {
               gender: p.gender
             })
             .eq('id', existing.id);
+          imported++;
           continue;
         }
       }
@@ -1111,6 +1121,8 @@ async function importParticipantsToDb(dataToImport) {
           gender: p.gender,
           results: {}
         });
+      
+      imported++;
     }
     
     await loadParticipants();
