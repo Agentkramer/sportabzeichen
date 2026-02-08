@@ -535,7 +535,9 @@
         <input type="text" id="firstNameInput" placeholder="Vorname" autocomplete="off">
         <input type="text" id="lastNameInput" placeholder="Nachname" autocomplete="off">
         <div class="input-row">
-          <input type="number" id="ageInput" placeholder="Alter" min="10" max="17" inputmode="numeric">
+        <select id="birthYearInput" required>
+            <option value="">Geburtsjahr wählen</option>
+        </select>
           <select id="genderInput">
             <option value="weiblich">Weiblich</option>
             <option value="maennlich">Männlich</option>
@@ -830,6 +832,30 @@
     // ============================================
     // HILFSFUNKTIONEN
     // ============================================
+    
+    function calculateAgeForYear(birthYear) {
+  const currentYear = new Date().getFullYear();
+  return currentYear - birthYear;
+}
+
+function populateBirthYearDropdown() {
+  const select = document.getElementById('birthYearInput');
+  if (!select) return; // Falls noch nicht geladen
+  
+  const currentYear = new Date().getFullYear();
+  
+  // Leere erst vorhandene Optionen (außer der ersten)
+  select.innerHTML = '<option value="">Geburtsjahr wählen</option>';
+  
+  // Schüler zwischen 10 und 18 Jahren
+  for (let year = currentYear - 18; year <= currentYear - 10; year++) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    select.appendChild(option);
+  }
+}
+    
     function timeToSeconds(timeStr) {
       if (typeof timeStr === 'number') return timeStr;
       const parts = timeStr.split(':');
@@ -898,24 +924,25 @@
     }
 
     function getParticipantPoints(participant) {
-      const ageGroup = getAgeGroup(participant.age);
-      const data = PERFORMANCE_DATA[participant.gender]?.[ageGroup];
-      const points = {};
-      
-      if (data) {
-        Object.keys(CATEGORIES).forEach(cat => {
-          const catResults = participant.results?.[cat];
-          if (catResults?.exercise && catResults?.value !== undefined && catResults?.value !== '') {
-            const exercise = data[cat]?.[catResults.exercise];
-            if (exercise) {
-              points[cat] = calculatePoints(catResults.value, exercise);
-            }
-          }
-        });
+  const age = calculateAgeForYear(participant.birth_year);  // ✅ Alter berechnen!
+  const ageGroup = getAgeGroup(age);  // ✅ Mit berechnetem Alter
+  const data = PERFORMANCE_DATA[participant.gender]?.[ageGroup];
+  const points = {};
+  
+  if (data) {
+    Object.keys(CATEGORIES).forEach(cat => {
+      const catResults = participant.results?.[cat];
+      if (catResults?.exercise && catResults?.value !== undefined && catResults?.value !== '') {
+        const exercise = data[cat]?.[catResults.exercise];
+        if (exercise) {
+          points[cat] = calculatePoints(catResults.value, exercise);
+        }
       }
-      
-      return points;
-    }
+    });
+  }
+  
+  return points;
+}
 
     function showLoading() {
       document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -955,7 +982,7 @@
     const formTitle = document.getElementById('formTitle');
     const firstNameInput = document.getElementById('firstNameInput');
     const lastNameInput = document.getElementById('lastNameInput');
-    const ageInput = document.getElementById('ageInput');
+    const birthYearInput = document.getElementById('birthYearInput');
     const genderInput = document.getElementById('genderInput');
     const disciplinesForms = document.getElementById('disciplinesForms');
 
@@ -999,7 +1026,7 @@
         .update({
           first_name: participant.first_name,
           last_name: participant.last_name,
-          age: participant.age,
+          birth_year: participant.birth_year,
           gender: participant.gender,
           results: participant.results
         })
@@ -1012,7 +1039,7 @@
         .insert({
           first_name: participant.first_name,
           last_name: participant.last_name,
-          age: participant.age,
+          birth_year: participant.birth_year,
           gender: participant.gender,
           results: participant.results || {}
         });
@@ -1044,27 +1071,27 @@
       hideLoading();
     }
 
-    async function importParticipantsToDb(dataToImport) {
-      showLoading();
-      try {
-        const { error } = await db
-          .from('participants')
-          .insert(dataToImport.map(p => ({
-            first_name: p.first_name,
-            last_name: p.last_name,
-            age: p.age,
-            gender: p.gender,
-            results: {}
-          })));
-        if (error) throw error;
-        await loadParticipants();
-        hideImport();
-      } catch (err) {
-        console.error('Fehler beim Import:', err);
-        alert('Fehler beim Import: ' + err.message);
-      }
-      hideLoading();
-    }
+   async function importParticipantsToDb(dataToImport) {
+  showLoading();
+  try {
+    const { error } = await db
+      .from('participants')
+      .insert(dataToImport.map(p => ({
+        first_name: p.first_name,
+        last_name: p.last_name,
+        birth_year: p.birth_year,  // ✅ GEÄNDERT
+        gender: p.gender,
+        results: {}
+      })));
+    if (error) throw error;
+    await loadParticipants();
+    hideImport();
+  } catch (err) {
+    console.error('Fehler beim Import:', err);
+    alert('Fehler beim Import: ' + err.message);
+  }
+  hideLoading();
+}
 
     // ============================================
     // RENDERING
@@ -1077,9 +1104,10 @@
         emptyState.classList.add('hidden');
         
         participantList.innerHTML = participants.map(p => {
+          
           const points = getParticipantPoints(p);
           const result = calculateOverallResult(points);
-          
+          const age = calculateAgeForYear(p.birth_year);
           let medalBadge = '';
           if (result.medal) {
             const medalEmoji = result.medal === 'gold' ? '🥇' : result.medal === 'silber' ? '🥈' : '🥉';
@@ -1092,7 +1120,7 @@
               <div class="card-header">
                 <div>
                   <div class="card-name">${p.first_name} ${p.last_name}</div>
-                  <div class="card-meta">${p.age} Jahre, ${p.gender}</div>
+                  <div class="card-meta">${age} Jahre, ${p.gender}</div>
                 </div>
                 ${medalBadge}
               </div>
@@ -1132,14 +1160,21 @@
       }
     }
 
-    function renderDisciplineForms() {
-      const age = parseInt(ageInput.value);
-      const gender = genderInput.value;
-      
-      if (!age || age < 10 || age > 17) {
-        disciplinesForms.innerHTML = '<div class="form-section"><p style="color: #94a3b8; text-align: center;">Bitte Alter eingeben (10-17 Jahre)</p></div>';
-        return;
-      }
+function renderDisciplineForms() {
+  const birthYear = parseInt(birthYearInput.value);
+  const gender = genderInput.value;
+  
+  if (!birthYear) {
+    disciplinesForms.innerHTML = '<div class="form-section"><p style="color: #94a3b8; text-align: center;">Bitte Geburtsjahr wählen</p></div>';
+    return;
+  }
+  
+  const age = calculateAgeForYear(birthYear);
+  
+  if (age < 10 || age > 17) {
+    disciplinesForms.innerHTML = '<div class="form-section"><p style="color: #94a3b8; text-align: center;">Ungültiges Geburtsjahr (Alter muss 10-17 Jahre sein)</p></div>';
+    return;
+  }
       
       const ageGroup = getAgeGroup(age);
       const data = PERFORMANCE_DATA[gender]?.[ageGroup];
@@ -1208,20 +1243,24 @@
     }
 
     function updateExerciseInfo(catKey) {
-      const age = parseInt(ageInput.value);
-      const gender = genderInput.value;
-      const ageGroup = getAgeGroup(age);
-      const data = PERFORMANCE_DATA[gender]?.[ageGroup]?.[catKey];
-      
-      const section = document.querySelector(`[data-category="${catKey}"]`);
-      const select = section.querySelector('.exercise-select');
-      const detailsDiv = document.getElementById(`details-${catKey}`);
-      
-      const exerciseKey = select.value;
-      if (!exerciseKey || !data?.[exerciseKey]) {
-        detailsDiv.innerHTML = '';
-        return;
-      }
+  const birthYear = parseInt(birthYearInput.value);  // ✅ GEÄNDERT
+  const gender = genderInput.value;
+  
+  if (!birthYear) return;  // ✅ NEU: Abbruch wenn kein Geburtsjahr
+  
+  const age = calculateAgeForYear(birthYear);  // ✅ NEU: Alter berechnen
+  const ageGroup = getAgeGroup(age);
+  const data = PERFORMANCE_DATA[gender]?.[ageGroup]?.[catKey];
+  
+  const section = document.querySelector(`[data-category="${catKey}"]`);
+  const select = section.querySelector('.exercise-select');
+  const detailsDiv = document.getElementById(`details-${catKey}`);
+  
+  const exerciseKey = select.value;
+  if (!exerciseKey || !data?.[exerciseKey]) {
+    detailsDiv.innerHTML = '';
+    return;
+  }
       
       const exercise = data[exerciseKey];
       const placeholder = exercise.unit === 'min:sec' ? 'MM:SS' : `Wert (${exercise.unit})`;
@@ -1245,27 +1284,31 @@
     }
 
     function updatePointsDisplay(catKey) {
-      const age = parseInt(ageInput.value);
-      const gender = genderInput.value;
-      const ageGroup = getAgeGroup(age);
-      const data = PERFORMANCE_DATA[gender]?.[ageGroup]?.[catKey];
-      
-      const section = document.querySelector(`[data-category="${catKey}"]`);
-      const select = section.querySelector('.exercise-select');
-      const valueInput = section.querySelector('.value-input');
-      const pointsDiv = document.getElementById(`points-${catKey}`);
-      
-      if (!select || !valueInput || !pointsDiv) return;
-      
-      const exerciseKey = select.value;
-      const exercise = data?.[exerciseKey];
-      
-      if (!exercise) return;
-      
-      const points = calculatePoints(valueInput.value, exercise);
-      pointsDiv.textContent = `${points} Pkt`;
-      pointsDiv.className = `result-points result-points-${points}`;
-    }
+  const birthYear = parseInt(birthYearInput.value);  // ✅ GEÄNDERT
+  const gender = genderInput.value;
+  
+  if (!birthYear) return;  // ✅ NEU: Abbruch wenn kein Geburtsjahr
+  
+  const age = calculateAgeForYear(birthYear);  // ✅ NEU: Alter berechnen
+  const ageGroup = getAgeGroup(age);
+  const data = PERFORMANCE_DATA[gender]?.[ageGroup]?.[catKey];
+  
+  const section = document.querySelector(`[data-category="${catKey}"]`);
+  const select = section.querySelector('.exercise-select');
+  const valueInput = section.querySelector('.value-input');
+  const pointsDiv = document.getElementById(`points-${catKey}`);
+  
+  if (!select || !valueInput || !pointsDiv) return;
+  
+  const exerciseKey = select.value;
+  const exercise = data?.[exerciseKey];
+  
+  if (!exercise) return;
+  
+  const points = calculatePoints(valueInput.value, exercise);
+  pointsDiv.textContent = `${points} Pkt`;
+  pointsDiv.className = `result-points result-points-${points}`;
+}
 
     // ============================================
     // FORMULAR-AKTIONEN
@@ -1290,6 +1333,7 @@
    function resetForm() {
       firstNameInput.value = '';
       lastNameInput.value = '';
+      birthYearInput.value = ''; 
       genderInput.value = 'weiblich';
       editingId = null;
       disciplinesForms.innerHTML = '';
@@ -1315,7 +1359,7 @@
             id: editingId,
             first_name: firstNameInput.value.trim(),
             last_name: lastNameInput.value.trim(),
-            age: parseInt(ageInput.value),
+            birth_year: parseInt(birthYearInput.value),
             gender: genderInput.value,
             results
         };
@@ -1324,6 +1368,7 @@
     function loadParticipantToForm(participant) {
       firstNameInput.value = participant.first_name || '';
       lastNameInput.value = participant.last_name || '';
+      birthYearInput.value = participant.birth_year || '';
       genderInput.value = participant.gender;
       editingId = participant.id;
       
@@ -1393,20 +1438,20 @@ function parseCSV(content) {
     let parts = line.includes(';') ? line.split(';') : line.split(',');
     parts = parts.map(p => p.trim().replace(/^["']|["']$/g, ''));
     
-    let firstName, lastName, age, gender;
+    let firstName, lastName, birthYear, gender;
     
     if (parts.length >= 4 && !isNaN(parseInt(parts[2]))) {
-      // Neues Format: Vorname;Nachname;Alter;Geschlecht
+      // Format: Vorname;Nachname;Geburtsjahr;Geschlecht
       firstName = parts[0];
       lastName = parts[1];
-      age = parseInt(parts[2]);
+      birthYear = parseInt(parts[2]);
       gender = parts[3].toLowerCase();
     } else if (parts.length >= 3) {
-      // Altes Format: Name;Alter;Geschlecht (Name aufteilen)
+      // Format: Name;Geburtsjahr;Geschlecht (Name aufteilen)
       const nameParts = parts[0].split(' ');
       firstName = nameParts[0] || '';
       lastName = nameParts.slice(1).join(' ') || '';
-      age = parseInt(parts[1]);
+      birthYear = parseInt(parts[1]);
       gender = parts[2].toLowerCase();
     } else {
       continue; // Ungültige Zeile überspringen
@@ -1421,41 +1466,50 @@ function parseCSV(content) {
       continue; // Ungültige Zeile überspringen
     }
     
-    if (firstName && age >= 10 && age <= 17) {
-      results.push({ first_name: firstName, last_name: lastName, age, gender });
+    // Geburtsjahr validieren (zwischen 2006 und 2016 für 10-18 Jährige)
+    const currentYear = new Date().getFullYear();
+    if (firstName && birthYear >= currentYear - 18 && birthYear <= currentYear - 10) {
+      results.push({ 
+        first_name: firstName, 
+        last_name: lastName, 
+        birth_year: birthYear,  // ✅ Geburtsjahr direkt
+        gender 
+      });
     }
   }
   
   return results;
 }
-
     function handleFileSelect(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target.result;
-        importData = parseCSV(content);
-        
-        if (importData.length === 0) {
-          previewContent.innerHTML = '<p style="color: #ef4444;">Keine gültigen Daten gefunden.<br>Format: Name;Alter;Geschlecht</p>';
-          importPreview.classList.remove('hidden');
-          confirmImportBtn.classList.add('hidden');
-          return;
-        }
-        
-        previewContent.innerHTML = `
-          <p style="color: #22c55e; margin-bottom: 0.5rem;">${importData.length} Teilnehmer erkannt:</p>
-          <div style="max-height: 200px; overflow-y: auto;">
-            ${importData.map(p => `<div style="font-size: 0.85rem; padding: 0.25rem 0;">${p.first_name} ${p.last_name} (${p.age}J, ${p.gender})</div>`).join('')}
-          </div>
-        `;
-        importPreview.classList.remove('hidden');
-        confirmImportBtn.classList.remove('hidden');
-      };
-      reader.readAsText(file);
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    importData = parseCSV(content);
+    
+    if (importData.length === 0) {
+      previewContent.innerHTML = '<p style="color: #ef4444;">Keine gültigen Daten gefunden.<br>Format: Vorname;Nachname;Geburtsjahr;Geschlecht</p>';  // ✅ "Geburtsjahr"
+      importPreview.classList.remove('hidden');
+      confirmImportBtn.classList.add('hidden');
+      return;
     }
+    
+    previewContent.innerHTML = `
+      <p style="color: #22c55e; margin-bottom: 0.5rem;">${importData.length} Teilnehmer erkannt:</p>
+      <div style="max-height: 200px; overflow-y: auto;">
+        ${importData.map(p => {
+          const age = calculateAgeForYear(p.birth_year);  // ✅ Alter berechnen
+          return `<div style="font-size: 0.85rem; padding: 0.25rem 0;">${p.first_name} ${p.last_name} (${age}J, ${p.gender})</div>`;
+        }).join('')}
+      </div>
+    `;
+    importPreview.classList.remove('hidden');
+    confirmImportBtn.classList.remove('hidden');
+  };
+  reader.readAsText(file);
+}
 
     // ============================================
     // CSV EXPORT
@@ -1464,13 +1518,14 @@ function parseCSV(content) {
       const headers = ['Vorname', 'Nachname', 'Alter', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
       
       const rows = participants.map(p => {
+        const age = calculateAgeForYear(p.birth_year);
         const points = getParticipantPoints(p);
         const result = calculateOverallResult(points);
         
         return [
           p.first_name,
           p.last_name,
-          p.age,
+          age,
           p.gender,
           points.ausdauer || 0,
           points.kraft || 0,
@@ -1513,7 +1568,7 @@ function parseCSV(content) {
     fileInput.addEventListener('change', handleFileSelect);
     confirmImportBtn.addEventListener('click', () => importParticipantsToDb(importData));
 
-    ageInput.addEventListener('input', renderDisciplineForms);
+    birthYearInput.addEventListener('change', renderDisciplineForms);
     genderInput.addEventListener('change', renderDisciplineForms);
 
     // ============================================
@@ -1526,6 +1581,7 @@ function parseCSV(content) {
     }
 
     // App starten
+    populateBirthYearDropdown();
     loadParticipants();
   </script>
 </body>
