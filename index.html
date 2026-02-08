@@ -1085,8 +1085,8 @@ function populateBirthYearDropdown() {
 async function importParticipantsToDb(dataToImport) {
   showLoading();
   
-  // Loading-Overlay für Progress nutzen
-  const loadingText = document.getElementById('loadingOverlay').querySelector('div');
+  // Loading-Text-Element holen
+  const loadingText = document.querySelector('.loading-text');  // ✅ GEÄNDERT
   
   try {
     let imported = 0;
