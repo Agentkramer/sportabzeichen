@@ -450,29 +450,37 @@
       display: none !important;
     }
 
-    /* Loading overlay */
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  display: flex;
+  flex-direction: column;  /* ✅ NEU: Vertikal stapeln */
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;  /* ✅ NEU: Abstand zwischen Spinner und Text */
+  z-index: 1000;
+}
 
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid #334155;
-      border-top-color: #f59e0b;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #334155;
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+.loading-text {
+  font-size: 1rem;
+  color: #94a3b8;
+  /* Kein animation hier! */
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
   </style>
 </head>
 <body>
@@ -480,6 +488,7 @@
   <!-- Loading Overlay -->
   <div id="loadingOverlay" class="loading-overlay hidden">
     <div class="loading-spinner"></div>
+    <div class="loading-text">Lädt...</div>
   </div>
 
   <!-- Header -->
