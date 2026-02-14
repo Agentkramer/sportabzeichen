@@ -518,8 +518,9 @@
     </div>
 
     <!-- Teilnehmerliste -->
-    <div id="listView">
-     <!-- Filter -->
+<div id="listView">
+  
+  <!-- Filter -->
   <div class="form-section" style="margin-bottom: 1rem;">
     <label for="classFilter" style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1;">🎓 Klasse filtern:</label>
     <select id="classFilter">
@@ -527,19 +528,22 @@
     </select>
   </div>
   
+  <!-- Teilnehmer-Zähler -->
+<div id="participantCount" style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; text-align: center;"></div>
+
+  
   <div id="emptyState" class="empty-state">
-      <div id="emptyState" class="empty-state">
-        <div class="icon">🎽</div>
-        <h2>Keine Teilnehmer</h2>
-        <p>Füge deinen ersten Teilnehmer hinzu</p>
-      </div>
-      
-      <div id="participantList"></div>
-      
-      <button id="addBtn" class="btn btn-primary btn-full" style="margin-top: 1rem;">
-        + Teilnehmer hinzufügen
-      </button>
-    </div>
+    <div class="icon">🎽</div>
+    <h2>Keine Teilnehmer</h2>
+    <p>Füge deinen ersten Teilnehmer hinzu</p>
+  </div>
+  
+  <div id="participantList"></div>
+  
+  <button id="addBtn" class="btn btn-primary btn-full" style="margin-top: 1rem;">
+    + Teilnehmer hinzufügen
+  </button>
+</div>
 
     <!-- Formular -->
     <div id="formView" class="hidden">
@@ -914,7 +918,7 @@ function populateClassFilter() {
   )].sort();
   
   // Leere Filter (außer "Alle Klassen")
-  filterSelect.innerHTML = '<option value="">Alle Klassen</option>';
+filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="NO_CLASS">Ohne Klasse</option>';
   
   // Füge alle verwendeten Klassen hinzu
   usedClasses.forEach(className => {
@@ -1210,9 +1214,6 @@ async function importParticipantsToDb(dataToImport) {
 }
 
    function renderList() {
-  console.log('🔥 renderList START');
-  console.log('🔥 participants.length:', participants.length);
-  console.log('🔥 currentClassFilter:', currentClassFilter);
   // Filter-Dropdown aktualisieren
   populateClassFilter();
   
@@ -1222,19 +1223,21 @@ async function importParticipantsToDb(dataToImport) {
   });
   
   // Filtere nach ausgewählter Klasse
-  const filteredParticipants = currentClassFilter 
-    ? sortedParticipants.filter(p => p.class_name === currentClassFilter)
-    : sortedParticipants;
+const filteredParticipants = currentClassFilter 
+  ? (currentClassFilter === 'NO_CLASS' 
+      ? sortedParticipants.filter(p => !p.class_name)  // Ohne Klasse
+      : sortedParticipants.filter(p => p.class_name === currentClassFilter))  // Spezifische Klasse
+  : sortedParticipants;  // Alle
   
-  console.log('🔥 filteredParticipants.length:', filteredParticipants.length);
+  // Aktualisiere Teilnehmer-Zähler
+const countDiv = document.getElementById('participantCount');
+countDiv.textContent = `${filteredParticipants.length} Teilnehmer`;
   
   // Prüfe, ob gefilterte Liste leer ist
 if (filteredParticipants.length === 0) {
-  console.log('🔥 EMPTY STATE');
   emptyState.classList.remove('hidden');
   participantList.innerHTML = '';
 } else {
-  console.log('🔥 RENDERING', filteredParticipants.length, 'participants');
   emptyState.classList.add('hidden');
   
   participantList.innerHTML = filteredParticipants.map(p => {
@@ -1253,7 +1256,7 @@ if (filteredParticipants.length === 0) {
         <div class="card" data-id="${p.id}">
           <div class="card-header">
             <div>
-              <div class="card-name">${p.first_name} ${p.last_name}</div>
+              <div class="card-name">${p.first_name} ${p.last_name}${p.class_name ? ` (${p.class_name})` : ''}</div>
               <div class="card-meta">${age} Jahre, ${p.gender}</div>
             </div>
             ${medalBadge}
@@ -1273,10 +1276,6 @@ if (filteredParticipants.length === 0) {
         </div>
       `;
     }).join('');
-     console.log('🔥 HTML generated, length:', participantList.innerHTML.length);
-     console.log('🔥 participantList element:', participantList);
-console.log('🔥 participantList classes:', participantList.className);
-console.log('🔥 emptyState hidden?', emptyState.classList.contains('hidden'));
     
     // Event-Listener für Buttons
     document.querySelectorAll('.edit-btn').forEach(btn => {
@@ -1724,9 +1723,9 @@ birthYearInput.addEventListener('change', renderDisciplineForms);
 genderInput.addEventListener('change', renderDisciplineForms);
 
 document.getElementById('classFilter').addEventListener('change', (e) => {
-  currentClassFilter = e.target.value;
+   currentClassFilter = e.target.value;
   renderList();
-});
+ });
 
     // ============================================
     // SERVICE WORKER & INIT
