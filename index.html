@@ -1563,6 +1563,11 @@ function showImport() {
   console.log('🔥 importView has hidden class?', importView.classList.contains('hidden'));
 console.log('🔥 importView classes:', importView.className);
   
+  // Scroll zum importView
+setTimeout(() => {
+  importView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}, 100);
+  
   headerActions.classList.add('hidden');
   importData = [];
   importPreview.classList.add('hidden');
