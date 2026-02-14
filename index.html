@@ -1580,6 +1580,16 @@ setTimeout(() => {
   console.log('🔥 showImport END');
 }
 
+// Debug: Prüfe Kinder-Elemente
+setTimeout(() => {
+  const children = importView.children;
+  console.log('🔥 importView children:', children.length);
+  for (let child of children) {
+    const rect = child.getBoundingClientRect();
+    console.log('🔥 Child:', child.className, 'Size:', rect.width, 'x', rect.height);
+  }
+}, 500);
+
 // Prüfe sichtbare Elemente
 setTimeout(() => {
   console.log('🔥 AFTER TIMEOUT:');
