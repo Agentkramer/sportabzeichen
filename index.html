@@ -1550,15 +1550,25 @@ function renderDisciplineForms() {
     // ============================================
     // IMPORT
     // ============================================
-    function showImport() {
-      listView.classList.add('hidden');
-      importView.classList.remove('hidden');
-      headerActions.classList.add('hidden');
-      importData = [];
-      importPreview.classList.add('hidden');
-      confirmImportBtn.classList.add('hidden');
-      fileInput.value = '';
-    }
+function showImport() {
+  console.log('🔥 showImport START');
+  console.log('🔥 listView:', listView);
+  console.log('🔥 importView:', importView);
+  
+  listView.classList.add('hidden');
+  console.log('🔥 listView hidden');
+  
+  importView.classList.remove('hidden');
+  console.log('🔥 importView shown');
+  
+  headerActions.classList.add('hidden');
+  importData = [];
+  importPreview.classList.add('hidden');
+  confirmImportBtn.classList.add('hidden');
+  fileInput.value = '';
+  
+  console.log('🔥 showImport END');
+}
 
     function hideImport() {
       importView.classList.add('hidden');
