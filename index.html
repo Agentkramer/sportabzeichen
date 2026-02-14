@@ -1580,6 +1580,23 @@ setTimeout(() => {
   console.log('🔥 showImport END');
 }
 
+// Prüfe sichtbare Elemente
+setTimeout(() => {
+  console.log('🔥 AFTER TIMEOUT:');
+  console.log('🔥 listView hidden?', listView.classList.contains('hidden'));
+  console.log('🔥 importView hidden?', importView.classList.contains('hidden'));
+  console.log('🔥 formView hidden?', formView.classList.contains('hidden'));
+  
+  // Prüfe Dimensionen
+  const rect = importView.getBoundingClientRect();
+  console.log('🔥 importView dimensions:', {
+    width: rect.width,
+    height: rect.height,
+    top: rect.top,
+    left: rect.left
+  });
+}, 500);
+
     function hideImport() {
          console.log('🔥 hideImport called!');
   console.trace(); // Zeigt, WER diese Funktion aufgerufen hat
