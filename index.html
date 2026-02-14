@@ -904,12 +904,13 @@ function populateClassNameDropdown() {
  
 function populateClassFilter() {
   const filterSelect = document.getElementById('classFilter');
+  const currentValue = filterSelect.value; // 🔥 Aktuellen Wert merken
   
   // Sammle alle eindeutigen Klassen aus den Teilnehmern
   const usedClasses = [...new Set(
     participants
       .map(p => p.class_name)
-      .filter(c => c) // Nur Teilnehmer MIT Klasse
+      .filter(c => c)
   )].sort();
   
   // Leere Filter (außer "Alle Klassen")
@@ -922,6 +923,9 @@ function populateClassFilter() {
     option.textContent = className;
     filterSelect.appendChild(option);
   });
+  
+  // Stelle vorherige Auswahl wieder her
+  filterSelect.value = currentValue; // 🔥 Wert wiederherstellen
 }
     
     function timeToSeconds(timeStr) {
