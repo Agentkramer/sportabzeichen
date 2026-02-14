@@ -526,6 +526,17 @@
     <select id="classFilter">
       <option value="">Alle Klassen</option>
     </select>
+    
+    <label for="performanceFilter" style="display: block; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1;">📊 Leistungsstand filtern:</label>
+    <select id="performanceFilter">
+      <option value="">Alle Teilnehmer</option>
+      <option value="complete">Vollständig (alle Disziplinen)</option>
+      <option value="incomplete">Unvollständig (min. 1 Disziplin offen)</option>
+      <option value="ausdauer">Ausdauer offen</option>
+      <option value="kraft">Kraft offen</option>
+      <option value="schnelligkeit">Schnelligkeit offen</option>
+      <option value="koordination">Koordination offen</option>
+    </select>
   </div>
   
   <!-- Teilnehmer-Zähler -->
@@ -1042,6 +1053,7 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     let participants = [];
     let editingId = null;
     let currentClassFilter = '';
+    let currentPerformanceFilter = '';
     let importData = [];
 
     // DOM-Elemente
@@ -1226,11 +1238,33 @@ async function importParticipantsToDb(dataToImport) {
   });
   
   // Filtere nach ausgewählter Klasse
-const filteredParticipants = currentClassFilter 
+const classFiltered = currentClassFilter 
   ? (currentClassFilter === 'NO_CLASS' 
       ? sortedParticipants.filter(p => !p.class_name)  // Ohne Klasse
       : sortedParticipants.filter(p => p.class_name === currentClassFilter))  // Spezifische Klasse
   : sortedParticipants;  // Alle
+  
+ // Filtere nach Leistungsstand
+const filteredParticipants = currentPerformanceFilter
+  ? classFiltered.filter(p => {
+      const points = getParticipantPoints(p);
+      
+      if (currentPerformanceFilter === 'complete') {
+        // Vollständig: ALLE 4 Disziplinen haben Punkte > 0
+        return ['ausdauer', 'kraft', 'schnelligkeit', 'koordination'].every(
+          d => points[d] && points[d] > 0
+        );
+      } else if (currentPerformanceFilter === 'incomplete') {
+        // Unvollständig: MINDESTENS eine Disziplin fehlt oder hat 0 Punkte
+        return ['ausdauer', 'kraft', 'schnelligkeit', 'koordination'].some(
+          d => !points[d] || points[d] === 0
+        );
+      } else {
+        // Spezifische Disziplin offen (fehlt oder ist 0)
+        return !points[currentPerformanceFilter] || points[currentPerformanceFilter] === 0;
+      }
+    })
+  : classFiltered;
   
   // Aktualisiere Teilnehmer-Zähler
 const countDiv = document.getElementById('participantCount');
@@ -1742,6 +1776,11 @@ document.getElementById('classFilter').addEventListener('change', (e) => {
    currentClassFilter = e.target.value;
   renderList();
  });
+
+document.getElementById('performanceFilter').addEventListener('change', (e) => {
+  currentPerformanceFilter = e.target.value;
+  renderList();
+});
 
     // ============================================
     // SERVICE WORKER & INIT
