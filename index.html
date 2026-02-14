@@ -1697,6 +1697,7 @@ function parseCSV(content) {
   result.total,
   result.medal ? result.medal.charAt(0).toUpperCase() + result.medal.slice(1) : 'Nicht bestanden'
 ].join(';');
+      });
       
       const csv = [headers.join(';'), ...rows].join('\n');
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
