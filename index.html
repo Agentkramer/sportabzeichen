@@ -1032,6 +1032,7 @@ function populateClassFilter() {
     // ============================================
     let participants = [];
     let editingId = null;
+    let currentClassFilter = '';
     let importData = [];
 
     // DOM-Elemente
@@ -1222,7 +1223,13 @@ async function importParticipantsToDb(dataToImport) {
           return a.last_name.localeCompare(b.last_name);
         });
         
-        participantList.innerHTML = sortedParticipants.map(p => {
+        // Filtere nach ausgewählter Klasse
+const filteredParticipants = currentClassFilter 
+  ? sortedParticipants.filter(p => p.class_name === currentClassFilter)
+  : sortedParticipants;
+        
+        
+        participantList.innerHTML = filteredParticipants.map(p => {
           
           const points = getParticipantPoints(p);
           const result = calculateOverallResult(points);
@@ -1682,28 +1689,33 @@ function parseCSV(content) {
       URL.revokeObjectURL(url);
     }
 
-    // ============================================
-    // EVENT LISTENERS
-    // ============================================
-    addBtn.addEventListener('click', () => {
-      resetForm();
-      showForm(false);
-    });
+// ============================================
+// EVENT LISTENERS
+// ============================================
+addBtn.addEventListener('click', () => {
+  resetForm();
+  showForm(false);
+});
 
-    closeFormBtn.addEventListener('click', hideForm);
-    cancelBtn.addEventListener('click', hideForm);
-    saveBtn.addEventListener('click', handleSave);
-    exportBtn.addEventListener('click', exportCSV);
-    importBtn.addEventListener('click', showImport);
+closeFormBtn.addEventListener('click', hideForm);
+cancelBtn.addEventListener('click', hideForm);
+saveBtn.addEventListener('click', handleSave);
+exportBtn.addEventListener('click', exportCSV);
+importBtn.addEventListener('click', showImport);
 
-    closeImportBtn.addEventListener('click', hideImport);
-    cancelImportBtn.addEventListener('click', hideImport);
-    selectFileBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', handleFileSelect);
-    confirmImportBtn.addEventListener('click', () => importParticipantsToDb(importData));
+closeImportBtn.addEventListener('click', hideImport);
+cancelImportBtn.addEventListener('click', hideImport);
+selectFileBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelect);
+confirmImportBtn.addEventListener('click', () => importParticipantsToDb(importData));
 
-    birthYearInput.addEventListener('change', renderDisciplineForms);
-    genderInput.addEventListener('change', renderDisciplineForms);
+birthYearInput.addEventListener('change', renderDisciplineForms);
+genderInput.addEventListener('change', renderDisciplineForms);
+
+document.getElementById('classFilter').addEventListener('change', (e) => {
+  currentClassFilter = e.target.value;
+  renderList();
+});
 
     // ============================================
     // SERVICE WORKER & INIT
