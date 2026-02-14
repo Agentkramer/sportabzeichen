@@ -519,6 +519,15 @@
 
     <!-- Teilnehmerliste -->
     <div id="listView">
+     <!-- Filter -->
+  <div class="form-section" style="margin-bottom: 1rem;">
+    <label for="classFilter" style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1;">🎓 Klasse filtern:</label>
+    <select id="classFilter">
+      <option value="">Alle Klassen</option>
+    </select>
+  </div>
+  
+  <div id="emptyState" class="empty-state">
       <div id="emptyState" class="empty-state">
         <div class="icon">🎽</div>
         <h2>Keine Teilnehmer</h2>
@@ -892,6 +901,28 @@ function populateClassNameDropdown() {
     classNameInput.appendChild(option);
   });
 }
+ 
+function populateClassFilter() {
+  const filterSelect = document.getElementById('classFilter');
+  
+  // Sammle alle eindeutigen Klassen aus den Teilnehmern
+  const usedClasses = [...new Set(
+    participants
+      .map(p => p.class_name)
+      .filter(c => c) // Nur Teilnehmer MIT Klasse
+  )].sort();
+  
+  // Leere Filter (außer "Alle Klassen")
+  filterSelect.innerHTML = '<option value="">Alle Klassen</option>';
+  
+  // Füge alle verwendeten Klassen hinzu
+  usedClasses.forEach(className => {
+    const option = document.createElement('option');
+    option.value = className;
+    option.textContent = className;
+    filterSelect.appendChild(option);
+  });
+}
     
     function timeToSeconds(timeStr) {
       if (typeof timeStr === 'number') return timeStr;
@@ -1182,6 +1213,9 @@ async function importParticipantsToDb(dataToImport) {
         participantList.innerHTML = '';
       } else {
         emptyState.classList.add('hidden');
+        
+      // Filter-Dropdown aktualisieren
+        populateClassFilter();
         
         // Sortiere nach Nachname (alphabetisch)
         const sortedParticipants = [...participants].sort((a, b) => {
