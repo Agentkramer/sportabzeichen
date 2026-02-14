@@ -543,15 +543,17 @@
         <h3>👤 Stammdaten</h3>
         <input type="text" id="firstNameInput" placeholder="Vorname" autocomplete="off">
         <input type="text" id="lastNameInput" placeholder="Nachname" autocomplete="off">
-        <div class="input-row">
-        <select id="birthYearInput" required>
-            <option value="">Geburtsjahr wählen</option>
-        </select>
-          <select id="genderInput">
-            <option value="weiblich">Weiblich</option>
-            <option value="maennlich">Männlich</option>
-          </select>
-        </div>
+       <div class="input-row" style="grid-template-columns: 1fr 1fr 1fr;">
+            <select id="birthYearInput" required>
+                 <option value="">Geburtsjahr wählen</option>
+            </select>
+            <select id="classNameInput">
+                 <option value="">Keine Klasse</option>
+            </select>
+            <select id="genderInput">
+                <option value="weiblich">Weiblich</option>
+                <option value="maennlich">Männlich</option>
+            </select>
       </div>
 
       <div id="disciplinesForms"></div>
@@ -604,6 +606,19 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1YXdiaXZlYm5rbnhuZWdyb2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwOTg5MTksImV4cCI6MjA4NTY3NDkxOX0.T5RCoPZSGuyRSxon-LNWAgefXf_WWN7VN4tBoIzwprQ';
     
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ============================================
+    // KLASSENLISTE
+    // ============================================
+
+const AVAILABLE_CLASSES = [
+    '5a', '5b', '5c',
+    '6a', '6b', '6c',
+    '7a', '7b', '7c',
+    '8a', '8b', '8c',
+    '9a', '9b', '9c',
+    '10a', '10b', '10c'
+];
 
     // ============================================
     // LEISTUNGSTABELLEN
@@ -863,6 +878,19 @@ function populateBirthYearDropdown() {
     option.textContent = year;
     select.appendChild(option);
   }
+}
+
+function populateClassNameDropdown() {
+  const classNameInput = document.getElementById('classNameInput');
+  
+  // "Keine Klasse" Option ist bereits im HTML
+  // Jetzt fügen wir die Klassen hinzu
+  AVAILABLE_CLASSES.forEach(className => {
+    const option = document.createElement('option');
+    option.value = className;
+    option.textContent = className;
+    classNameInput.appendChild(option);
+  });
 }
     
     function timeToSeconds(timeStr) {
@@ -1384,6 +1412,7 @@ function renderDisciplineForms() {
       firstNameInput.value = '';
       lastNameInput.value = '';
       birthYearInput.value = ''; 
+      document.getElementById('classNameInput').value = '';
       genderInput.value = 'weiblich';
       editingId = null;
       disciplinesForms.innerHTML = '';
@@ -1410,6 +1439,7 @@ function renderDisciplineForms() {
             first_name: firstNameInput.value.trim(),
             last_name: lastNameInput.value.trim(),
             birth_year: parseInt(birthYearInput.value),
+            class_name: document.getElementById('classNameInput').value || null,
             gender: genderInput.value,
             results
         };
@@ -1419,6 +1449,7 @@ function renderDisciplineForms() {
       firstNameInput.value = participant.first_name || '';
       lastNameInput.value = participant.last_name || '';
       birthYearInput.value = participant.birth_year || '';
+      document.getElementById('classNameInput').value = participant.class_name || '';
       genderInput.value = participant.gender;
       editingId = participant.id;
       
@@ -1644,6 +1675,7 @@ function parseCSV(content) {
 
     // App starten
     populateBirthYearDropdown();
+    populateClassNameDropdown();
     loadParticipants();
   </script>
 </body>
