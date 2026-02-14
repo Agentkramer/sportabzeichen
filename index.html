@@ -1210,6 +1210,9 @@ async function importParticipantsToDb(dataToImport) {
 }
 
    function renderList() {
+  console.log('🔥 renderList START');
+  console.log('🔥 participants.length:', participants.length);
+  console.log('🔥 currentClassFilter:', currentClassFilter);
   // Filter-Dropdown aktualisieren
   populateClassFilter();
   
@@ -1223,14 +1226,18 @@ async function importParticipantsToDb(dataToImport) {
     ? sortedParticipants.filter(p => p.class_name === currentClassFilter)
     : sortedParticipants;
   
+  console.log('🔥 filteredParticipants.length:', filteredParticipants.length);
+  
   // Prüfe, ob gefilterte Liste leer ist
-  if (filteredParticipants.length === 0) {
-    emptyState.classList.remove('hidden');
-    participantList.innerHTML = '';
-  } else {
-    emptyState.classList.add('hidden');
-    
-    participantList.innerHTML = filteredParticipants.map(p => {
+if (filteredParticipants.length === 0) {
+  console.log('🔥 EMPTY STATE');
+  emptyState.classList.remove('hidden');
+  participantList.innerHTML = '';
+} else {
+  console.log('🔥 RENDERING', filteredParticipants.length, 'participants');
+  emptyState.classList.add('hidden');
+  
+  participantList.innerHTML = filteredParticipants.map(p => {
       
       const points = getParticipantPoints(p);
       const result = calculateOverallResult(points);
@@ -1266,6 +1273,10 @@ async function importParticipantsToDb(dataToImport) {
         </div>
       `;
     }).join('');
+     console.log('🔥 HTML generated, length:', participantList.innerHTML.length);
+     console.log('🔥 participantList element:', participantList);
+console.log('🔥 participantList classes:', participantList.className);
+console.log('🔥 emptyState hidden?', emptyState.classList.contains('hidden'));
     
     // Event-Listener für Buttons
     document.querySelectorAll('.edit-btn').forEach(btn => {
