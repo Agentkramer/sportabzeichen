@@ -585,7 +585,7 @@
       </div>
 
       <div class="import-section">
-       <p>Lade eine CSV-Datei mit Teilnehmern hoch.<br>Format: Vorname;Nachname;Alter;Geschlecht</p>
+       <p>Lade eine CSV-Datei mit Teilnehmern hoch.<br>Format: Vorname;Nachname;Geburtsjahr;Klasse;Geschlecht</p>
         <input type="file" id="fileInput" class="file-input" accept=".csv,.txt">
         <button id="selectFileBtn" class="btn btn-secondary">Datei auswählen</button>
       </div>
@@ -1578,28 +1578,39 @@ function parseCSV(content) {
     let parts = line.includes(';') ? line.split(';') : line.split(',');
     parts = parts.map(p => p.trim().replace(/^["']|["']$/g, ''));
     
-    let firstName, lastName, birthYear, gender, externalId;
+    let firstName, lastName, birthYear, className, gender, externalId;
     
-    if (parts.length >= 5 && !isNaN(parseInt(parts[3]))) {
-      // Format: external_id;Vorname;Nachname;Geburtsjahr;Geschlecht
+    if (parts.length >= 6 && !isNaN(parseInt(parts[3]))) {
+      // Format: external_id;Vorname;Nachname;Geburtsjahr;Klasse;Geschlecht
       externalId = parts[0];
       firstName = parts[1];
       lastName = parts[2];
       birthYear = parseInt(parts[3]);
-      gender = parts[4].toLowerCase();
-    } else if (parts.length >= 4 && !isNaN(parseInt(parts[2]))) {
-      // Format ohne external_id: Vorname;Nachname;Geburtsjahr;Geschlecht
+      className = parts[4] || null;
+      gender = parts[5].toLowerCase();
+    } else if (parts.length >= 5 && !isNaN(parseInt(parts[2]))) {
+      // Format ohne external_id: Vorname;Nachname;Geburtsjahr;Klasse;Geschlecht
       firstName = parts[0];
       lastName = parts[1];
       birthYear = parseInt(parts[2]);
+      className = parts[3] || null;
+      gender = parts[4].toLowerCase();
+      externalId = null;
+    } else if (parts.length >= 4 && !isNaN(parseInt(parts[2]))) {
+      // Altes Format ohne Klasse: Vorname;Nachname;Geburtsjahr;Geschlecht
+      firstName = parts[0];
+      lastName = parts[1];
+      birthYear = parseInt(parts[2]);
+      className = null;
       gender = parts[3].toLowerCase();
       externalId = null;
     } else if (parts.length >= 3) {
-      // Altes Format: Name;Geburtsjahr;Geschlecht (Name aufteilen)
+      // Sehr altes Format: Name;Geburtsjahr;Geschlecht (Name aufteilen)
       const nameParts = parts[0].split(' ');
       firstName = nameParts[0] || '';
       lastName = nameParts.slice(1).join(' ') || '';
       birthYear = parseInt(parts[1]);
+      className = null;
       gender = parts[2].toLowerCase();
       externalId = null;
     } else {
@@ -1615,13 +1626,14 @@ function parseCSV(content) {
       continue; // Ungültige Zeile überspringen
     }
     
-    // Geburtsjahr validieren (zwischen 2006 und 2016 für 10-18 Jährige)
-    if (firstName && birthYear >= currentYear - 18 && birthYear <= currentYear - 10) {
+    // Geburtsjahr validieren (zwischen 2009 und 2016 für 10-17 Jährige)
+    if (firstName && birthYear >= currentYear - 17 && birthYear <= currentYear - 10) {
       results.push({ 
         external_id: externalId,
         first_name: firstName, 
         last_name: lastName, 
         birth_year: birthYear,
+        class_name: className,
         gender 
       });
     }
@@ -1629,7 +1641,6 @@ function parseCSV(content) {
   
   return results;
 }
-
     function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1640,7 +1651,7 @@ function parseCSV(content) {
     importData = parseCSV(content);
     
     if (importData.length === 0) {
-      previewContent.innerHTML = '<p style="color: #ef4444;">Keine gültigen Daten gefunden.<br>Format: Vorname;Nachname;Geburtsjahr;Geschlecht</p>';  // ✅ "Geburtsjahr"
+      previewContent.innerHTML = '<p style="color: #ef4444;">Keine gültigen Daten gefunden.<br>Format: Vorname;Nachname;Geburtsjahr;Klasse;Geschlecht</p>';
       importPreview.classList.remove('hidden');
       confirmImportBtn.classList.add('hidden');
       return;
@@ -1665,7 +1676,7 @@ function parseCSV(content) {
     // CSV EXPORT
     // ============================================
     function exportCSV() {
-      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
+      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Klasse', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
       
       const rows = participants.map(p => {
         const age = calculateAgeForYear(p.birth_year);
@@ -1673,19 +1684,19 @@ function parseCSV(content) {
         const result = calculateOverallResult(points);
         
         return [
-          p.external_id || '',
-          p.first_name,
-          p.last_name,
-          p.birth_year,
-          p.gender,
-          points.ausdauer || 0,
-          points.kraft || 0,
-          points.schnelligkeit || 0,
-          points.koordination || 0,
-          result.total,
-          result.medal ? result.medal.charAt(0).toUpperCase() + result.medal.slice(1) : 'Nicht bestanden'
-        ].join(';');
-      });
+  p.external_id || '',
+  p.first_name,
+  p.last_name,
+  p.birth_year,
+  p.class_name || '',
+  p.gender,
+  points.ausdauer || 0,
+  points.kraft || 0,
+  points.schnelligkeit || 0,
+  points.koordination || 0,
+  result.total,
+  result.medal ? result.medal.charAt(0).toUpperCase() + result.medal.slice(1) : 'Nicht bestanden'
+].join(';');
       
       const csv = [headers.join(';'), ...rows].join('\n');
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
