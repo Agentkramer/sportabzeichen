@@ -1205,86 +1205,82 @@ async function importParticipantsToDb(dataToImport) {
   hideLoading();
 }
 
-    // ============================================
-    // RENDERING
-    // ============================================
-    function renderList() {
-      if (participants.length === 0) {
-        emptyState.classList.remove('hidden');
-        participantList.innerHTML = '';
-      } else {
-        emptyState.classList.add('hidden');
-        
-      // Filter-Dropdown aktualisieren
-        populateClassFilter();
-        
-        // Sortiere nach Nachname (alphabetisch)
-        const sortedParticipants = [...participants].sort((a, b) => {
-          return a.last_name.localeCompare(b.last_name);
-        });
-        
-        // Filtere nach ausgewählter Klasse
-const filteredParticipants = currentClassFilter 
-  ? sortedParticipants.filter(p => p.class_name === currentClassFilter)
-  : sortedParticipants;
-        
-        
-        participantList.innerHTML = filteredParticipants.map(p => {
-          
-          const points = getParticipantPoints(p);
-          const result = calculateOverallResult(points);
-          const age = calculateAgeForYear(p.birth_year);
-          let medalBadge = '';
-          if (result.medal) {
-            const medalEmoji = result.medal === 'gold' ? '🥇' : result.medal === 'silber' ? '🥈' : '🥉';
-            const medalClass = `medal-${result.medal}`;
-            medalBadge = `<span class="medal-badge ${medalClass}">${medalEmoji} ${result.medal.charAt(0).toUpperCase() + result.medal.slice(1)}</span>`;
-          }
-          
-          return `
-            <div class="card" data-id="${p.id}">
-              <div class="card-header">
-                <div>
-                  <div class="card-name">${p.first_name} ${p.last_name}</div>
-                  <div class="card-meta">${age} Jahre, ${p.gender}</div>
-                </div>
-                ${medalBadge}
-              </div>
-              <div class="points-grid">
-                ${Object.entries(CATEGORIES).map(([key, cat]) => `
-                  <div class="points-item">
-                    <div class="points-icon">${cat.icon}</div>
-                    <div class="points-value points-${points[key] || 0}">${points[key] || '-'}</div>
-                  </div>
-                `).join('')}
-              </div>
-              <div class="card-actions">
-                <button class="btn btn-secondary edit-btn" data-id="${p.id}">Bearbeiten</button>
-                <button class="btn btn-danger delete-btn" data-id="${p.id}">🗑️</button>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        // Event-Listener für Buttons
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const id = btn.dataset.id;
-            const participant = participants.find(p => p.id === id);
-            if (participant) {
-              loadParticipantToForm(participant);
-              showForm(true);
-            }
-          });
-        });
-
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            deleteParticipantFromDb(btn.dataset.id);
-          });
-        });
+   function renderList() {
+  // Filter-Dropdown aktualisieren
+  populateClassFilter();
+  
+  // Sortiere nach Nachname (alphabetisch)
+  const sortedParticipants = [...participants].sort((a, b) => {
+    return a.last_name.localeCompare(b.last_name);
+  });
+  
+  // Filtere nach ausgewählter Klasse
+  const filteredParticipants = currentClassFilter 
+    ? sortedParticipants.filter(p => p.class_name === currentClassFilter)
+    : sortedParticipants;
+  
+  // Prüfe, ob gefilterte Liste leer ist
+  if (filteredParticipants.length === 0) {
+    emptyState.classList.remove('hidden');
+    participantList.innerHTML = '';
+  } else {
+    emptyState.classList.add('hidden');
+    
+    participantList.innerHTML = filteredParticipants.map(p => {
+      
+      const points = getParticipantPoints(p);
+      const result = calculateOverallResult(points);
+      const age = calculateAgeForYear(p.birth_year);
+      let medalBadge = '';
+      if (result.medal) {
+        const medalEmoji = result.medal === 'gold' ? '🥇' : result.medal === 'silber' ? '🥈' : '🥉';
+        const medalClass = `medal-${result.medal}`;
+        medalBadge = `<span class="medal-badge ${medalClass}">${medalEmoji} ${result.medal.charAt(0).toUpperCase() + result.medal.slice(1)}</span>`;
       }
-    }
+      
+      return `
+        <div class="card" data-id="${p.id}">
+          <div class="card-header">
+            <div>
+              <div class="card-name">${p.first_name} ${p.last_name}</div>
+              <div class="card-meta">${age} Jahre, ${p.gender}</div>
+            </div>
+            ${medalBadge}
+          </div>
+          <div class="points-grid">
+            ${Object.entries(CATEGORIES).map(([key, cat]) => `
+              <div class="points-item">
+                <div class="points-icon">${cat.icon}</div>
+                <div class="points-value points-${points[key] || 0}">${points[key] || '-'}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-secondary edit-btn" data-id="${p.id}">Bearbeiten</button>
+            <button class="btn btn-danger delete-btn" data-id="${p.id}">🗑️</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Event-Listener für Buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const participant = participants.find(p => p.id === id);
+        if (participant) {
+          loadParticipantToForm(participant);
+          showForm(true);
+        }
+      });
+    });
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        deleteParticipantFromDb(btn.dataset.id);
+      });
+    });
+  }
+}
 
 function renderDisciplineForms() {
   const birthYear = parseInt(birthYearInput.value);
