@@ -1214,6 +1214,8 @@ async function importParticipantsToDb(dataToImport) {
 }
 
    function renderList() {
+         console.log('🔥 renderList called');
+  console.trace(); // Zeigt, WER diese Funktion aufgerufen hat
   // Filter-Dropdown aktualisieren
   populateClassFilter();
   
@@ -1579,6 +1581,8 @@ setTimeout(() => {
 }
 
     function hideImport() {
+         console.log('🔥 hideImport called!');
+  console.trace(); // Zeigt, WER diese Funktion aufgerufen hat
       importView.classList.add('hidden');
       listView.classList.remove('hidden');
       headerActions.classList.remove('hidden');
