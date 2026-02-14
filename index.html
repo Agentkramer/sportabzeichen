@@ -871,8 +871,8 @@ function populateBirthYearDropdown() {
   // Leere erst vorhandene Optionen (außer der ersten)
   select.innerHTML = '<option value="">Geburtsjahr wählen</option>';
   
-  // Schüler zwischen 10 und 18 Jahren
-  for (let year = currentYear - 18; year <= currentYear - 10; year++) {
+  // Schüler zwischen 10 und 17 Jahren
+  for (let year = currentYear - 17; year <= currentYear - 10; year++) {
     const option = document.createElement('option');
     option.value = year;
     option.textContent = year;
@@ -1064,6 +1064,7 @@ function populateClassNameDropdown() {
           first_name: participant.first_name,
           last_name: participant.last_name,
           birth_year: participant.birth_year,
+          class_name: participant.class_name || null,
           gender: participant.gender,
           external_id: participant.external_id || null,
           results: participant.results
@@ -1078,6 +1079,7 @@ function populateClassNameDropdown() {
           first_name: participant.first_name,
           last_name: participant.last_name,
           birth_year: participant.birth_year,
+          class_name: participant.class_name || null,
           gender: participant.gender,
           external_id: participant.external_id || null,
           results: participant.results || {}
@@ -1181,7 +1183,12 @@ async function importParticipantsToDb(dataToImport) {
       } else {
         emptyState.classList.add('hidden');
         
-        participantList.innerHTML = participants.map(p => {
+        // Sortiere nach Nachname (alphabetisch)
+        const sortedParticipants = [...participants].sort((a, b) => {
+          return a.last_name.localeCompare(b.last_name);
+        });
+        
+        participantList.innerHTML = sortedParticipants.map(p => {
           
           const points = getParticipantPoints(p);
           const result = calculateOverallResult(points);
