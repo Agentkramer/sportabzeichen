@@ -552,33 +552,34 @@
         <button id="closeFormBtn" class="close-btn">✕</button>
       </div>
 
-      <div class="form-section">
-        <h3>👤 Stammdaten</h3>
-        <input type="text" id="firstNameInput" placeholder="Vorname" autocomplete="off">
-        <input type="text" id="lastNameInput" placeholder="Nachname" autocomplete="off">
-       <div class="input-row" style="grid-template-columns: 1fr 1fr 1fr;">
-            <select id="birthYearInput" required>
-                 <option value="">Geburtsjahr wählen</option>
-            </select>
-            <select id="classNameInput">
-                 <option value="">Keine Klasse</option>
-            </select>
-            <select id="genderInput">
-                <option value="weiblich">Weiblich</option>
-                <option value="maennlich">Männlich</option>
-            </select>
-      </div>
+     <div class="form-section">
+  <h3>👤 Stammdaten</h3>
+  <input type="text" id="firstNameInput" placeholder="Vorname" autocomplete="off">
+  <input type="text" id="lastNameInput" placeholder="Nachname" autocomplete="off">
+  <div class="input-row" style="grid-template-columns: 1fr 1fr 1fr;">
+    <select id="birthYearInput" required>
+      <option value="">Geburtsjahr wählen</option>
+    </select>
+    <select id="classNameInput">
+      <option value="">Keine Klasse</option>
+    </select>
+    <select id="genderInput">
+      <option value="weiblich">Weiblich</option>
+      <option value="maennlich">Männlich</option>
+    </select>
+  </div>
+</div>
 
-      <div id="disciplinesForms"></div>
+<div id="disciplinesForms"></div>
 
-      <div class="form-actions">
-        <button id="cancelBtn" class="btn btn-secondary">Abbrechen</button>
-        <button id="saveBtn" class="btn btn-primary">Speichern</button>
-      </div>
-    </div>
+<div class="form-actions">
+  <button id="cancelBtn" class="btn btn-secondary">Abbrechen</button>
+  <button id="saveBtn" class="btn btn-primary">Speichern</button>
+</div>
+</div>  <!-- CLOSES formView -->
 
     <!-- Import View -->
-   <div id="importView" class="hidden" style="display: block; position: relative; padding: 2rem; min-height: 500px; background: #1e293b; width: 100%; max-width: 640px; margin: 0 auto;">
+<div id="importView" class="hidden" style="display: block; position: relative; padding: 2rem; min-height: 500px; background: #1e293b; width: 100%; max-width: 640px; margin: 0 auto;">
       <div class="form-header">
         <h2>CSV Import</h2>
         <button id="closeImportBtn" class="close-btn">✕</button>
@@ -1214,7 +1215,6 @@ async function importParticipantsToDb(dataToImport) {
 }
 
    function renderList() {
-         console.log('🔥 renderList called');
   console.trace(); // Zeigt, WER diese Funktion aufgerufen hat
   // Filter-Dropdown aktualisieren
   populateClassFilter();
@@ -1553,23 +1553,9 @@ function renderDisciplineForms() {
     // IMPORT
     // ============================================
 function showImport() {
-  console.log('🔥 showImport START');
-  console.log('🔥 listView:', listView);
-  console.log('🔥 importView:', importView);
-  
+
   listView.classList.add('hidden');
-  console.log('🔥 listView hidden');
-  
   importView.classList.remove('hidden');
-  alert('ImportView sollte jetzt sichtbar sein!');
-  console.log('🔥 importView shown');
-  console.log('🔥 importView has hidden class?', importView.classList.contains('hidden'));
-console.log('🔥 importView classes:', importView.className);
-  
-  // Scroll zum importView
-setTimeout(() => {
-  importView.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}, 100);
   
   headerActions.classList.add('hidden');
   importData = [];
@@ -1577,48 +1563,7 @@ setTimeout(() => {
   confirmImportBtn.classList.add('hidden');
   fileInput.value = '';
   
-  console.log('🔥 showImport END');
-}
-
-setTimeout(() => {
-  console.log('🔥 Scrolling to importView...');
-  window.scrollTo(0, 0); // Scroll ganz nach oben
-  importView.style.border = '5px solid red'; // Roter Rahmen
-  importView.style.minHeight = '500px';
-  importView.style.background = 'yellow'; // Gelb!
-  console.log('🔥 Yellow border added');
-}, 500);
-
-// Debug: Prüfe Kinder-Elemente
-setTimeout(() => {
-  const children = importView.children;
-  console.log('🔥 importView children:', children.length);
-  for (let child of children) {
-    const rect = child.getBoundingClientRect();
-    console.log('🔥 Child:', child.className, 'Size:', rect.width, 'x', rect.height);
-  }
-}, 500);
-
-// Prüfe sichtbare Elemente
-setTimeout(() => {
-  console.log('🔥 AFTER TIMEOUT:');
-  console.log('🔥 listView hidden?', listView.classList.contains('hidden'));
-  console.log('🔥 importView hidden?', importView.classList.contains('hidden'));
-  console.log('🔥 formView hidden?', formView.classList.contains('hidden'));
-  
-  // Prüfe Dimensionen
-  const rect = importView.getBoundingClientRect();
-  console.log('🔥 importView dimensions:', {
-    width: rect.width,
-    height: rect.height,
-    top: rect.top,
-    left: rect.left
-  });
-}, 500);
-
     function hideImport() {
-         console.log('🔥 hideImport called!');
-  console.trace(); // Zeigt, WER diese Funktion aufgerufen hat
       importView.classList.add('hidden');
       listView.classList.remove('hidden');
       headerActions.classList.remove('hidden');
