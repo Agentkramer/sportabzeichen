@@ -1157,7 +1157,7 @@ async function importParticipantsToDb(dataToImport) {
   showLoading();
   
   // Loading-Text-Element holen
-  const loadingText = document.querySelector('.loading-text');  // ✅ GEÄNDERT
+  const loadingText = document.querySelector('.loading-text');
   
   try {
     let imported = 0;
@@ -1182,6 +1182,7 @@ async function importParticipantsToDb(dataToImport) {
               first_name: p.first_name,
               last_name: p.last_name,
               birth_year: p.birth_year,
+              class_name: p.class_name || null,
               gender: p.gender
             })
             .eq('id', existing.id);
@@ -1198,6 +1199,7 @@ async function importParticipantsToDb(dataToImport) {
           first_name: p.first_name,
           last_name: p.last_name,
           birth_year: p.birth_year,
+          class_name: p.class_name || null,
           gender: p.gender,
           results: {}
         });
@@ -1215,7 +1217,6 @@ async function importParticipantsToDb(dataToImport) {
 }
 
    function renderList() {
-  console.trace(); // Zeigt, WER diese Funktion aufgerufen hat
   // Filter-Dropdown aktualisieren
   populateClassFilter();
   
