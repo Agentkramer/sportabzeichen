@@ -1580,6 +1580,15 @@ setTimeout(() => {
   console.log('🔥 showImport END');
 }
 
+setTimeout(() => {
+  console.log('🔥 Scrolling to importView...');
+  window.scrollTo(0, 0); // Scroll ganz nach oben
+  importView.style.border = '5px solid red'; // Roter Rahmen
+  importView.style.minHeight = '500px';
+  importView.style.background = 'yellow'; // Gelb!
+  console.log('🔥 Yellow border added');
+}, 500);
+
 // Debug: Prüfe Kinder-Elemente
 setTimeout(() => {
   const children = importView.children;
