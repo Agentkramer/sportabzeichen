@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+œ<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -537,6 +537,14 @@
       <option value="schnelligkeit">Schnelligkeit offen</option>
       <option value="koordination">Koordination offen</option>
     </select>
+    <label for="searchInput" style="display: block; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1;">🔍 Name suchen:</label>
+    <input 
+      type="text" 
+      id="searchInput" 
+      placeholder="Vor- oder Nachname…" 
+      autocomplete="off"
+      style="width: 100%; padding: 0.5rem; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; color: #f1f5f9; font-size: 0.95rem;"
+    >
   </div>
   
   <!-- Teilnehmer-Zähler -->
@@ -1266,18 +1274,27 @@ const filteredParticipants = currentPerformanceFilter
     })
   : classFiltered;
   
+// Filtere nach Suchbegriff
+  const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+  const searchFiltered = searchTerm
+    ? filteredParticipants.filter(p =>
+        p.first_name.toLowerCase().includes(searchTerm) ||
+        p.last_name.toLowerCase().includes(searchTerm)
+      )
+    : filteredParticipants;
+
   // Aktualisiere Teilnehmer-Zähler
 const countDiv = document.getElementById('participantCount');
-countDiv.textContent = `${filteredParticipants.length} Teilnehmer`;
+countDiv.textContent = `${searchFiltered.length} Teilnehmer`;
   
   // Prüfe, ob gefilterte Liste leer ist
-if (filteredParticipants.length === 0) {
+if (searchFiltered.length === 0) {
   emptyState.classList.remove('hidden');
   participantList.innerHTML = '';
 } else {
   emptyState.classList.add('hidden');
   
-  participantList.innerHTML = filteredParticipants.map(p => {
+  participantList.innerHTML = searchFiltered.map(p => {
       
       const points = getParticipantPoints(p);
       const result = calculateOverallResult(points);
@@ -1781,6 +1798,8 @@ document.getElementById('performanceFilter').addEventListener('change', (e) => {
   currentPerformanceFilter = e.target.value;
   renderList();
 });
+
+document.getElementById('searchInput').addEventListener('input', renderList);
 
     // ============================================
     // SERVICE WORKER & INIT
