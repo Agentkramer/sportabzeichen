@@ -1,4 +1,3 @@
- <script>
     // ============================================
     // SUPABASE CONFIG
     // ============================================
@@ -1181,4 +1180,3 @@ document.getElementById('searchInput').addEventListener('input', renderList);
     populateBirthYearDropdown();
     populateClassNameDropdown();
     loadParticipants();
-  </script>
