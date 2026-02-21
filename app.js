@@ -35,17 +35,20 @@ const AVAILABLE_CLASSES = [
             "schlagball_80g": { unit: "m", bronze: 11, silber: 15, gold: 18, lowerIsBetter: false },
             "medizinball_1kg": { unit: "m", bronze: 5.0, silber: 6.0, gold: 7.0, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 1.30, silber: 1.45, gold: 1.65, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Barren" },
           },
           schnelligkeit: {
             "lauf_50m": { unit: "sec", bronze: 11.0, silber: 10.1, gold: 9.1, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 39.0, silber: 31.5, gold: 25.5, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 37.0, silber: 32.0, gold: 27.0, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 0.80, silber: 0.90, gold: 1.00, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 2.30, silber: 2.60, gold: 2.90, lowerIsBetter: false },
             "drehwurf": { unit: "Pkt", bronze: 27, silber: 30, gold: 36, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 20, silber: 30, gold: 40, lowerIsBetter: false, note: "Grundsprung vorwärts ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Ringe" },
           }
         },
         "12-13": {
@@ -59,17 +62,20 @@ const AVAILABLE_CLASSES = [
             "schlagball_80g": { unit: "m", bronze: 15, silber: 18, gold: 22, lowerIsBetter: false },
             "kugel_3kg": { unit: "m", bronze: 4.75, silber: 5.25, gold: 5.75, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 1.40, silber: 1.60, gold: 1.80, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
           },
           schnelligkeit: {
             "lauf_50m": { unit: "sec", bronze: 10.6, silber: 9.6, gold: 8.5, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 35.0, silber: 29.0, gold: 23.5, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 31.0, silber: 27.0, gold: 23.5, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 0.90, silber: 1.00, gold: 1.10, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 2.80, silber: 3.10, gold: 3.40, lowerIsBetter: false },
             "schleuderball_1kg": { unit: "m", bronze: 17.0, silber: 19.5, gold: 22.0, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 10, silber: 20, gold: 30, lowerIsBetter: false, note: "Grundsprung rückwärts ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
         },
         "14-15": {
@@ -83,17 +89,20 @@ const AVAILABLE_CLASSES = [
             "wurfball_200g": { unit: "m", bronze: 20, silber: 24, gold: 27, lowerIsBetter: false },
             "kugel_3kg": { unit: "m", bronze: 5.50, silber: 6.00, gold: 6.50, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 1.55, silber: 1.70, gold: 1.90, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           },
           schnelligkeit: {
             "lauf_100m": { unit: "sec", bronze: 18.6, silber: 17.0, gold: 15.5, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 33.0, silber: 27.5, gold: 21.5, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 27.0, silber: 24.5, gold: 21.5, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 0.95, silber: 1.05, gold: 1.15, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 3.20, silber: 3.50, gold: 3.80, lowerIsBetter: false },
             "schleuderball_1kg": { unit: "m", bronze: 19.5, silber: 22.5, gold: 25.5, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 20, lowerIsBetter: false, note: "Kreuzdurchschlag ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
         },
         "16-17": {
@@ -107,17 +116,20 @@ const AVAILABLE_CLASSES = [
             "wurfball_200g": { unit: "m", bronze: 24, silber: 27, gold: 31, lowerIsBetter: false },
             "kugel_3kg": { unit: "m", bronze: 5.75, silber: 6.25, gold: 6.75, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 1.65, silber: 1.80, gold: 2.00, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
           },
           schnelligkeit: {
             "lauf_100m": { unit: "sec", bronze: 17.6, silber: 16.3, gold: 15.0, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 30.5, silber: 25.5, gold: 20.0, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 25.0, silber: 22.5, gold: 20.0, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 1.05, silber: 1.15, gold: 1.25, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 3.40, silber: 3.70, gold: 4.00, lowerIsBetter: false },
             "schleuderball_1kg": { unit: "m", bronze: 22.0, silber: 25.0, gold: 28.0, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 20, lowerIsBetter: false, note: "Kreuzdurchschlag ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
         }
       },
@@ -133,17 +145,20 @@ const AVAILABLE_CLASSES = [
             "schlagball_80g": { unit: "m", bronze: 21, silber: 25, gold: 28, lowerIsBetter: false },
             "medizinball_1kg": { unit: "m", bronze: 5.5, silber: 6.5, gold: 7.5, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 1.50, silber: 1.70, gold: 1.85, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Barren" },
           },
           schnelligkeit: {
             "lauf_50m": { unit: "sec", bronze: 10.3, silber: 9.3, gold: 8.4, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 36.0, silber: 29.0, gold: 22.5, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 35.0, silber: 30.5, gold: 26.0, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 0.85, silber: 0.95, gold: 1.05, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 2.60, silber: 2.90, gold: 3.20, lowerIsBetter: false },
             "drehwurf": { unit: "Pkt", bronze: 33, silber: 39, gold: 45, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 20, silber: 30, gold: 40, lowerIsBetter: false, note: "Grundsprung vorwärts ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Ringe" },
           }
         },
         "12-13": {
@@ -157,17 +172,20 @@ const AVAILABLE_CLASSES = [
             "wurfball_200g": { unit: "m", bronze: 26, silber: 30, gold: 33, lowerIsBetter: false },
             "kugel_3kg": { unit: "m", bronze: 6.25, silber: 6.75, gold: 7.25, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 1.70, silber: 1.90, gold: 2.05, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
           },
           schnelligkeit: {
             "lauf_50m": { unit: "sec", bronze: 9.7, silber: 8.9, gold: 8.1, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 33.0, silber: 27.0, gold: 21.0, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 29.5, silber: 26.0, gold: 22.5, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 0.95, silber: 1.05, gold: 1.15, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 3.20, silber: 3.50, gold: 3.80, lowerIsBetter: false },
             "schleuderball_1kg": { unit: "m", bronze: 19.5, silber: 24.0, gold: 27.5, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 10, silber: 20, gold: 30, lowerIsBetter: false, note: "Grundsprung rückwärts ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
         },
         "14-15": {
@@ -181,17 +199,20 @@ const AVAILABLE_CLASSES = [
             "wurfball_200g": { unit: "m", bronze: 30, silber: 34, gold: 37, lowerIsBetter: false },
             "kugel_4kg": { unit: "m", bronze: 7.0, silber: 7.5, gold: 8.0, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 1.90, silber: 2.05, gold: 2.25, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           },
           schnelligkeit: {
             "lauf_100m": { unit: "sec", bronze: 17.0, silber: 15.4, gold: 14.1, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 31.0, silber: 25.5, gold: 20.0, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 24.0, silber: 21.5, gold: 19.0, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 1.10, silber: 1.20, gold: 1.30, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 3.80, silber: 4.10, gold: 4.40, lowerIsBetter: false },
             "schleuderball_1kg": { unit: "m", bronze: 23.5, silber: 28.0, gold: 32.0, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 20, lowerIsBetter: false, note: "Kreuzdurchschlag ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
         },
         "16-17": {
@@ -205,17 +226,20 @@ const AVAILABLE_CLASSES = [
             "wurfball_200g": { unit: "m", bronze: 34, silber: 38, gold: 42, lowerIsBetter: false },
             "kugel_5kg": { unit: "m", bronze: 7.5, silber: 8.0, gold: 8.5, lowerIsBetter: false },
             "standweitsprung": { unit: "m", bronze: 2.05, silber: 2.20, gold: 2.40, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
           },
           schnelligkeit: {
             "lauf_100m": { unit: "sec", bronze: 16.3, silber: 14.8, gold: 13.5, lowerIsBetter: true },
             "schwimmen_25m": { unit: "sec", bronze: 29.5, silber: 24.5, gold: 19.0, lowerIsBetter: true },
             "radfahren_200m": { unit: "sec", bronze: 22.0, silber: 19.5, gold: 17.0, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
           },
           koordination: {
             "hochsprung": { unit: "m", bronze: 1.20, silber: 1.30, gold: 1.40, lowerIsBetter: false },
             "weitsprung": { unit: "m", bronze: 4.30, silber: 4.60, gold: 4.90, lowerIsBetter: false },
             "schleuderball_1kg": { unit: "m", bronze: 27.5, silber: 32.0, gold: 36.5, lowerIsBetter: false },
             "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 20, lowerIsBetter: false, note: "Kreuzdurchschlag ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
         }
       }
@@ -243,6 +267,8 @@ const AVAILABLE_CLASSES = [
       "drehwurf": "Drehwurf",
       "schleuderball_1kg": "Schleuderball (1kg)",
       "seilspringen": "Seilspringen",
+      "geraetturnen": "Gerätturnen",
+
     };
 
     const CATEGORIES = {
@@ -333,6 +359,12 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     }
 
     function calculatePoints(value, exercise) {
+          // Gerätturnen: Wert ist direkt die Punktzahl (0-3)
+  if (exercise.type === "turnen") {
+    const pts = parseInt(value);
+    return isNaN(pts) ? 0 : Math.min(3, Math.max(0, pts));
+  }
+  
       if (value === null || value === undefined || value === '') return 0;
       
       let numValue = parseFloat(String(value).replace(',', '.'));
@@ -819,21 +851,41 @@ function renderDisciplineForms() {
   }
       
       const exercise = data[exerciseKey];
-      const placeholder = exercise.unit === 'min:sec' ? 'MM:SS' : `Wert (${exercise.unit})`;
       
-      detailsDiv.innerHTML = `
-        <div class="result-input-group">
-          <input type="text" class="value-input" placeholder="${placeholder}" inputmode="${exercise.unit === 'min:sec' ? 'text' : 'decimal'}">
-          <div class="result-points result-points-0" id="points-${catKey}">0 Pkt</div>
-        </div>
-        <div class="thresholds">
-          <span>🥉 ${exercise.bronze}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
-          <span>🥈 ${exercise.silber}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
-          <span>🥇 ${exercise.gold}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
-        </div>
-        ${exercise.note ? `<div class="exercise-note">${exercise.note}</div>` : ''}
-      `;
+      // Gerätturnen: Dropdown 0-3 statt Texteingabe
+if (exercise.type === "turnen") {
+  detailsDiv.innerHTML = `
+    <div class="result-input-group">
+      <select class="value-input">
+        <option value="">– Bewertung –</option>
+        <option value="0">0 Punkte (nicht bestanden)</option>
+        <option value="1">1 Punkt (Bronze)</option>
+        <option value="2">2 Punkte (Silber)</option>
+        <option value="3">3 Punkte (Gold)</option>
+      </select>
+      <div class="result-points result-points-0" id="points-${catKey}">0 Pkt</div>
+    </div>
+    <div class="exercise-note">🤸 Gerät: ${exercise.geraet}</div>
+  `;
+  const valueInput = section.querySelector('.value-input');
+  valueInput.addEventListener('change', () => updatePointsDisplay(catKey));
+  return;
+}
 
+const placeholder = exercise.unit === 'min:sec' ? 'MM:SS' : `Wert (${exercise.unit})`;
+
+detailsDiv.innerHTML = `
+  <div class="result-input-group">
+    <input type="text" class="value-input" placeholder="${placeholder}" inputmode="${exercise.unit === 'min:sec' ? 'text' : 'decimal'}">
+    <div class="result-points result-points-0" id="points-${catKey}">0 Pkt</div>
+  </div>
+  <div class="thresholds">
+    <span>🥉 ${exercise.bronze}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
+    <span>🥈 ${exercise.silber}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
+    <span>🥇 ${exercise.gold}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
+  </div>
+  ${exercise.note ? `<div class="exercise-note">${exercise.note}</div>` : ''}
+`;
       // Event-Listener für Wert-Eingabe
       const valueInput = section.querySelector('.value-input');
       valueInput.addEventListener('input', () => updatePointsDisplay(catKey));
