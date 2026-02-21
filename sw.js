@@ -1,8 +1,10 @@
-const CACHE_NAME = 'sportabzeichen-v33';
+const CACHE_NAME = 'sportabzeichen-v34';
 const urlsToCache = [
   '/sportabzeichen/',
   '/sportabzeichen/index.html',
   '/sportabzeichen/manifest.json'
+  '/sportabzeichen/styles.css',
+'/sportabzeichen/app.js',
 ];
 
 // Installation
