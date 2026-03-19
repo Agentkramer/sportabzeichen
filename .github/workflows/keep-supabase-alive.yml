@@ -12,7 +12,7 @@ jobs:
       - name: Ping Supabase
         run: |
           curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/participants?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
             --fail \
             --silent \
             --show-error
