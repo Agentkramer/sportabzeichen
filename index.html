@@ -20,6 +20,20 @@
     <div class="loading-text">Lädt...</div>
   </div>
 
+  <!-- Login View -->
+  <div id="loginView" class="hidden login-container">
+    <div class="login-card">
+      <div class="logo-icon" style="margin: 0 auto 1rem;">🏅</div>
+      <h1 style="text-align: center; margin-bottom: 1.5rem;">Sportabzeichen Login</h1>
+      <input type="email" id="loginEmail" placeholder="E-Mail" autocomplete="username">
+      <input type="password" id="loginPassword" placeholder="Passwort" autocomplete="current-password">
+      <div id="loginError" class="login-error hidden"></div>
+      <button id="loginBtn" class="btn btn-primary btn-full">Anmelden</button>
+    </div>
+  </div>
+
+  <div id="appContent" class="hidden">
+
   <!-- Header -->
   <header class="header">
     <div class="header-content">
@@ -33,6 +47,7 @@
       <div class="header-actions" id="headerActions">
         <button id="importBtn" class="btn btn-secondary btn-icon" title="CSV Import">📥</button>
         <button id="exportBtn" class="btn btn-success btn-icon" title="CSV Export">💾</button>
+        <button id="logoutBtn" class="btn btn-secondary btn-icon" title="Abmelden">🚪</button>
       </div>
     </div>
   </header>
@@ -156,6 +171,8 @@
   <footer class="footer">
     Deutsches Sportabzeichen – Leistungstabellen gültig ab 2024
   </footer>
+
+  </div> <!-- CLOSES appContent -->
 
   <!-- Supabase Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

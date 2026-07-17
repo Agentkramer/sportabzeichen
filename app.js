@@ -454,6 +454,50 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     }
 
     // ============================================
+    // AUTH
+    // ============================================
+    function showLoginView() {
+      document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('appContent').classList.add('hidden');
+    }
+
+    function showAppView() {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('appContent').classList.remove('hidden');
+    }
+
+    async function handleLogin() {
+      const email = loginEmailInput.value.trim();
+      const password = loginPasswordInput.value;
+      loginError.classList.add('hidden');
+      if (!email || !password) return;
+
+      loginBtn.disabled = true;
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      loginBtn.disabled = false;
+
+      if (error) {
+        loginError.textContent = 'Anmeldung fehlgeschlagen: E-Mail oder Passwort falsch.';
+        loginError.classList.remove('hidden');
+      } else {
+        loginPasswordInput.value = '';
+      }
+    }
+
+    async function handleLogout() {
+      await db.auth.signOut();
+    }
+
+    db.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        showAppView();
+        loadParticipants();
+      } else {
+        showLoginView();
+      }
+    });
+
+    // ============================================
     // APP STATE
     // ============================================
     let participants = [];
@@ -463,6 +507,13 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     let importData = [];
 
     // DOM-Elemente
+    const loginView = document.getElementById('loginView');
+    const appContent = document.getElementById('appContent');
+    const loginEmailInput = document.getElementById('loginEmail');
+    const loginPasswordInput = document.getElementById('loginPassword');
+    const loginError = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
     const listView = document.getElementById('listView');
     const formView = document.getElementById('formView');
     const importView = document.getElementById('importView');
@@ -1219,6 +1270,12 @@ document.getElementById('performanceFilter').addEventListener('change', (e) => {
 
 document.getElementById('searchInput').addEventListener('input', renderList);
 
+loginBtn.addEventListener('click', handleLogin);
+loginPasswordInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleLogin();
+});
+logoutBtn.addEventListener('click', handleLogout);
+
     // ============================================
     // SERVICE WORKER & INIT
     // ============================================
@@ -1231,4 +1288,4 @@ document.getElementById('searchInput').addEventListener('input', renderList);
     // App starten
     populateBirthYearDropdown();
     populateClassNameDropdown();
-    loadParticipants();
+    // loadParticipants() wird von onAuthStateChange getriggert, sobald eine Session besteht
