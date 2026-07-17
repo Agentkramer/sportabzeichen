@@ -738,27 +738,27 @@ async function importParticipantsToDb(dataToImport) {
   hideLoading();
 }
 
-   function renderList() {
-  // Filter-Dropdown aktualisieren
-  populateClassFilter();
-  
+   // Wendet Klassen-, Leistungsstand- und Suchfilter an (gleiche Filter wie
+   // in der Listenansicht) - wird von renderList() UND exportCSV() genutzt,
+   // damit der Export immer zur aktuell sichtbaren/gefilterten Liste passt.
+   function getFilteredParticipants() {
   // Sortiere nach Nachname (alphabetisch)
   const sortedParticipants = [...participants].sort((a, b) => {
     return a.last_name.localeCompare(b.last_name);
   });
-  
+
   // Filtere nach ausgewählter Klasse
-const classFiltered = currentClassFilter 
-  ? (currentClassFilter === 'NO_CLASS' 
+const classFiltered = currentClassFilter
+  ? (currentClassFilter === 'NO_CLASS'
       ? sortedParticipants.filter(p => !p.class_name)  // Ohne Klasse
       : sortedParticipants.filter(p => p.class_name === currentClassFilter))  // Spezifische Klasse
   : sortedParticipants;  // Alle
-  
+
  // Filtere nach Leistungsstand
 const filteredParticipants = currentPerformanceFilter
   ? classFiltered.filter(p => {
       const points = getParticipantPoints(p);
-      
+
       if (currentPerformanceFilter === 'complete') {
         // Vollständig: ALLE 4 Disziplinen haben Punkte > 0
         return ['ausdauer', 'kraft', 'schnelligkeit', 'koordination'].every(
@@ -775,15 +775,22 @@ const filteredParticipants = currentPerformanceFilter
       }
     })
   : classFiltered;
-  
+
 // Filtere nach Suchbegriff
   const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-  const searchFiltered = searchTerm
+  return searchTerm
     ? filteredParticipants.filter(p =>
         p.first_name.toLowerCase().includes(searchTerm) ||
         p.last_name.toLowerCase().includes(searchTerm)
       )
     : filteredParticipants;
+}
+
+function renderList() {
+  // Filter-Dropdown aktualisieren
+  populateClassFilter();
+
+  const searchFiltered = getFilteredParticipants();
 
   // Aktualisiere Teilnehmer-Zähler
 const countDiv = document.getElementById('participantCount');
@@ -1351,13 +1358,20 @@ function parseCSV(content) {
     // CSV EXPORT
     // ============================================
     function exportCSV() {
-      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Klasse', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis'];
-      
-      const rows = participants.map(p => {
+      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Klasse', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis', 'Offene Disziplinen'];
+
+      // Exportiert die aktuell gefilterte Liste (z.B. "Unvollständig"), nicht
+      // zwangsläufig alle Teilnehmer - so wird der Export zur "Übersicht
+      // offener Leistungen", wenn man vorher entsprechend filtert.
+      const rows = getFilteredParticipants().map(p => {
         const age = calculateAgeForYear(p.birth_year);
         const points = getParticipantPoints(p);
         const result = calculateOverallResult(points);
-        
+        const openDisciplines = Object.entries(CATEGORIES)
+          .filter(([key]) => !points[key] || points[key] === 0)
+          .map(([, cat]) => cat.label)
+          .join(', ');
+
         return [
   p.external_id || '',
   p.first_name,
@@ -1370,7 +1384,8 @@ function parseCSV(content) {
   points.schnelligkeit || 0,
   points.koordination || 0,
   result.total,
-  result.medal ? result.medal.charAt(0).toUpperCase() + result.medal.slice(1) : 'Nicht bestanden'
+  result.medal ? result.medal.charAt(0).toUpperCase() + result.medal.slice(1) : 'Nicht bestanden',
+  openDisciplines
 ].join(';');
       });
       
