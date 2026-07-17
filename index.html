@@ -47,6 +47,7 @@
       <div class="header-actions" id="headerActions">
         <button id="importBtn" class="btn btn-secondary btn-icon" title="CSV Import">📥</button>
         <button id="exportBtn" class="btn btn-success btn-icon" title="CSV Export">💾</button>
+        <button id="adminBtn" class="btn btn-secondary btn-icon hidden" title="Nutzerverwaltung">👥</button>
         <button id="logoutBtn" class="btn btn-secondary btn-icon" title="Abmelden">🚪</button>
       </div>
     </div>
@@ -162,6 +163,40 @@
       <div class="form-actions">
         <button id="cancelImportBtn" class="btn btn-secondary">Abbrechen</button>
         <button id="confirmImportBtn" class="btn btn-primary hidden">Importieren</button>
+      </div>
+    </div>
+
+    <!-- Admin View: Nutzerverwaltung -->
+    <div id="adminView" class="hidden">
+      <div class="form-header">
+        <h2>👥 Nutzerverwaltung</h2>
+        <button id="closeAdminBtn" class="close-btn">✕</button>
+      </div>
+
+      <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">
+        Neue Accounts legst du im Supabase-Dashboard unter Authentication → Users an.
+        Hier weist du Rolle und Klassen zu.
+      </p>
+
+      <div id="profilesList"></div>
+
+      <!-- Edit-Formular -->
+      <div id="profileEditForm" class="form-section hidden">
+        <h3 id="profileEditEmail"></h3>
+
+        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1;">Rolle</label>
+        <select id="profileRoleInput">
+          <option value="examiner">Examiner</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <label style="display: block; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: #cbd5e1;">Klassen</label>
+        <div id="profileClassesCheckboxes" class="checkbox-group"></div>
+
+        <div class="form-actions">
+          <button id="cancelProfileEditBtn" class="btn btn-secondary">Abbrechen</button>
+          <button id="saveProfileBtn" class="btn btn-primary">Speichern</button>
+        </div>
       </div>
     </div>
 

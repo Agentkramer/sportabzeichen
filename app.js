@@ -307,9 +307,21 @@ function populateBirthYearDropdown() {
 
 function populateClassNameDropdown() {
   const classNameInput = document.getElementById('classNameInput');
-  
-  // "Keine Klasse" Option ist bereits im HTML
-  // Jetzt fügen wir die Klassen hinzu
+
+  if (currentUserRole === 'examiner') {
+    // Examiner sehen/wählen nur ihre zugewiesenen Klassen (RLS erlaubt eh nichts anderes)
+    if (currentUserClasses.length === 0) {
+      classNameInput.innerHTML = '<option value="" disabled selected>Keine Klasse zugewiesen</option>';
+    } else {
+      classNameInput.innerHTML = currentUserClasses
+        .map(c => `<option value="${c}">${c}</option>`)
+        .join('');
+    }
+    return;
+  }
+
+  // Admin (oder vor dem Login): alle Klassen zur Auswahl
+  classNameInput.innerHTML = '<option value="">Keine Klasse</option>';
   AVAILABLE_CLASSES.forEach(className => {
     const option = document.createElement('option');
     option.value = className;
@@ -488,8 +500,33 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
       await db.auth.signOut();
     }
 
-    db.auth.onAuthStateChange((event, session) => {
+    async function loadCurrentUserProfile(userId) {
+      const { data, error } = await db
+        .from('profiles')
+        .select('role, classes')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Fehler beim Laden des eigenen Profils:', error);
+        currentUserRole = 'examiner';
+        currentUserClasses = [];
+        return;
+      }
+
+      currentUserRole = data.role;
+      currentUserClasses = data.classes || [];
+    }
+
+    function applyRoleBasedUI() {
+      adminBtn.classList.toggle('hidden', currentUserRole !== 'admin');
+      populateClassNameDropdown();
+    }
+
+    db.auth.onAuthStateChange(async (event, session) => {
       if (session) {
+        await loadCurrentUserProfile(session.user.id);
+        applyRoleBasedUI();
         showAppView();
         loadParticipants();
       } else {
@@ -505,6 +542,10 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     let currentClassFilter = '';
     let currentPerformanceFilter = '';
     let importData = [];
+    let currentUserRole = null;
+    let currentUserClasses = [];
+    let profiles = [];
+    let editingProfileId = null;
 
     // DOM-Elemente
     const loginView = document.getElementById('loginView');
@@ -541,6 +582,18 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     const fileInput = document.getElementById('fileInput');
     const importPreview = document.getElementById('importPreview');
     const previewContent = document.getElementById('previewContent');
+
+    // Admin-Elemente
+    const adminBtn = document.getElementById('adminBtn');
+    const adminView = document.getElementById('adminView');
+    const closeAdminBtn = document.getElementById('closeAdminBtn');
+    const profilesList = document.getElementById('profilesList');
+    const profileEditForm = document.getElementById('profileEditForm');
+    const profileEditEmail = document.getElementById('profileEditEmail');
+    const profileRoleInput = document.getElementById('profileRoleInput');
+    const profileClassesCheckboxes = document.getElementById('profileClassesCheckboxes');
+    const cancelProfileEditBtn = document.getElementById('cancelProfileEditBtn');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
 
     // ============================================
     // SUPABASE OPERATIONS
@@ -774,7 +827,7 @@ if (searchFiltered.length === 0) {
           </div>
           <div class="card-actions">
             <button class="btn btn-secondary edit-btn" data-id="${p.id}">Bearbeiten</button>
-            <button class="btn btn-danger delete-btn" data-id="${p.id}">🗑️</button>
+            ${currentUserRole === 'admin' ? `<button class="btn btn-danger delete-btn" data-id="${p.id}">🗑️</button>` : ''}
           </div>
         </div>
       `;
@@ -1091,6 +1144,104 @@ function showImport() {
       importData = [];
     }
 
+    // ============================================
+    // ADMIN: NUTZERVERWALTUNG
+    // ============================================
+    function showAdmin() {
+      listView.classList.add('hidden');
+      adminView.classList.remove('hidden');
+      headerActions.classList.add('hidden');
+      profileEditForm.classList.add('hidden');
+    }
+
+    function hideAdmin() {
+      adminView.classList.add('hidden');
+      listView.classList.remove('hidden');
+      headerActions.classList.remove('hidden');
+    }
+
+    async function loadProfiles() {
+      const { data, error } = await db
+        .from('profiles')
+        .select('*')
+        .order('email', { ascending: true });
+
+      if (error) {
+        console.error('Fehler beim Laden der Nutzer:', error);
+        alert('Fehler beim Laden der Nutzer: ' + error.message);
+        return;
+      }
+
+      profiles = data || [];
+      renderProfilesList();
+    }
+
+    function renderProfilesList() {
+      if (profiles.length === 0) {
+        profilesList.innerHTML = '<p style="color: #94a3b8;">Keine Nutzer gefunden.</p>';
+        return;
+      }
+
+      profilesList.innerHTML = profiles.map(p => `
+        <div class="card" data-id="${p.id}">
+          <div class="card-header">
+            <div>
+              <div class="card-name">${p.email || '(keine E-Mail)'}</div>
+              <div class="card-meta">
+                ${p.role === 'admin' ? 'Admin' : 'Examiner'}${p.classes && p.classes.length ? ' · ' + p.classes.join(', ') : ''}
+              </div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-secondary edit-profile-btn" data-id="${p.id}">Bearbeiten</button>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.edit-profile-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const profile = profiles.find(p => p.id === btn.dataset.id);
+          if (profile) loadProfileToForm(profile);
+        });
+      });
+    }
+
+    function loadProfileToForm(profile) {
+      editingProfileId = profile.id;
+      profileEditEmail.textContent = profile.email || '(keine E-Mail)';
+      profileRoleInput.value = profile.role;
+
+      profileClassesCheckboxes.innerHTML = AVAILABLE_CLASSES.map(className => `
+        <label class="checkbox-item">
+          <input type="checkbox" value="${className}" ${profile.classes?.includes(className) ? 'checked' : ''}>
+          ${className}
+        </label>
+      `).join('');
+
+      profileEditForm.classList.remove('hidden');
+    }
+
+    async function saveProfile() {
+      const role = profileRoleInput.value;
+      const classes = Array.from(
+        profileClassesCheckboxes.querySelectorAll('input[type="checkbox"]:checked')
+      ).map(cb => cb.value);
+
+      const { error } = await db
+        .from('profiles')
+        .update({ role, classes })
+        .eq('id', editingProfileId);
+
+      if (error) {
+        console.error('Fehler beim Speichern des Profils:', error);
+        alert('Fehler beim Speichern: ' + error.message);
+        return;
+      }
+
+      profileEditForm.classList.add('hidden');
+      await loadProfiles();
+    }
+
 function parseCSV(content) {
   const lines = content.split('\n').filter(l => l.trim());
   const results = [];
@@ -1275,6 +1426,16 @@ loginPasswordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') handleLogin();
 });
 logoutBtn.addEventListener('click', handleLogout);
+
+adminBtn.addEventListener('click', () => {
+  showAdmin();
+  loadProfiles();
+});
+closeAdminBtn.addEventListener('click', hideAdmin);
+cancelProfileEditBtn.addEventListener('click', () => {
+  profileEditForm.classList.add('hidden');
+});
+saveProfileBtn.addEventListener('click', saveProfile);
 
     // ============================================
     // SERVICE WORKER & INIT
