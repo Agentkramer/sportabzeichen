@@ -16,14 +16,18 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
   sonst greift der Cache nicht neu; hält sich hartnäckig, im Zweifel Hard-Reload
   oder Service Worker in den DevTools abmelden)
 - Keep-Alive gegen die Supabase-Pausierung (Free Tier pausiert nach 7 Tagen
-  Inaktivität) läuft über einen externen Cronjob bei **cron-job.org**, der
-  `POST /rest/v1/keep_alive` aufruft (Header `apikey`, Body `{}`) und damit eine
-  Zeile in die Tabelle `keep_alive` schreibt. Der frühere GitHub-Actions-Workflow
-  wurde entfernt: GitHub deaktiviert geplante Workflows nach 60 Tagen ohne Commit
-  – bei unregelmäßiger Weiterentwicklung also unbrauchbar. Ein reiner Lese-Ping
-  auf `participants` reicht übrigens nicht, weil er seit RLS als `anon` ein
-  leeres Ergebnis liefert und offenbar nicht als Aktivität zählt – es braucht
-  einen echten Schreibvorgang. Details und bekannte Schwächen: `sql/004_keepalive.sql`.
+  Inaktivität) läuft über einen externen Cronjob bei **cron-job.org**:
+  `POST /rest/v1/rpc/keep_alive_ping` (Header `apikey`, Body `{}`), täglich,
+  mit aktivierter Fehlerbenachrichtigung. Die Funktion liest `participants` und
+  schreibt eine Statuszeile fort (siehe `sql/009_keepalive_neu.sql`).
+  Kontrolle: `select * from public.keep_alive_status;` – `last_ping` sollte
+  keine 24 Stunden alt sein.
+- **Zwei Lehren aus zwei Pausierungen:** (1) Ein reiner *Lese*-Ping genügt
+  nicht – als `anon` liefert er wegen RLS ein leeres Ergebnis und zählte
+  offenbar nicht als Aktivität; es braucht einen Schreibvorgang. (2) Der
+  frühere GitHub-Actions-Workflow wurde von GitHub nach 60 Tagen ohne Commit
+  automatisch abgeschaltet. Beide Ausfälle blieben lange unbemerkt – der
+  stille Ausfall ist das eigentliche Risiko, deshalb die Benachrichtigung.
 
 ## Datenstruktur
 
