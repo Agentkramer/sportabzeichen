@@ -805,13 +805,15 @@ async function importParticipantsToDb(dataToImport) {
   // Loading-Text-Element holen
   const loadingText = document.querySelector('.loading-text');
   
+  const failed = [];
+
   try {
     let imported = 0;
-    
+
     for (const p of dataToImport) {
       // Progress anzeigen
       loadingText.textContent = `Importiere ${imported + 1} / ${dataToImport.length}...`;
-      
+
       // Check ob Teilnehmer mit external_id schon existiert
       if (p.external_id) {
         const { data: existing } = await db
@@ -819,10 +821,10 @@ async function importParticipantsToDb(dataToImport) {
           .select('id')
           .eq('external_id', p.external_id)
           .maybeSingle();
-        
+
         if (existing) {
           // UPDATE bestehender Teilnehmer
-          await db
+          const { error } = await db
             .from('participants')
             .update({
               first_name: p.first_name,
@@ -832,13 +834,17 @@ async function importParticipantsToDb(dataToImport) {
               gender: p.gender
             })
             .eq('id', existing.id);
-          imported++;
+          if (error) {
+            failed.push({ name: `${p.first_name} ${p.last_name}`, message: error.message });
+          } else {
+            imported++;
+          }
           continue;
         }
       }
-      
+
       // INSERT neuer Teilnehmer
-      await db
+      const { error } = await db
         .from('participants')
         .insert({
           external_id: p.external_id || null,
@@ -849,12 +855,23 @@ async function importParticipantsToDb(dataToImport) {
           gender: p.gender,
           results: {}
         });
-      
-      imported++;
+
+      if (error) {
+        failed.push({ name: `${p.first_name} ${p.last_name}`, message: error.message });
+      } else {
+        imported++;
+      }
     }
-    
+
     await loadParticipants();
     hideImport();
+
+    if (failed.length > 0) {
+      alert(
+        `${failed.length} Teilnehmer konnten nicht importiert werden:\n\n` +
+        failed.map(f => `- ${f.name}: ${f.message}`).join('\n')
+      );
+    }
   } catch (err) {
     console.error('Fehler beim Import:', err);
     alert('Fehler beim Import: ' + err.message);
