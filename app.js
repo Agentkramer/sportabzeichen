@@ -1193,11 +1193,31 @@ detailsDiv.innerHTML = `
    function resetForm() {
       firstNameInput.value = '';
       lastNameInput.value = '';
-      birthYearInput.value = ''; 
+      birthYearInput.value = '';
       document.getElementById('classNameInput').value = '';
       genderInput.value = 'weiblich';
       editingId = null;
       disciplinesForms.innerHTML = '';
+      document.getElementById('lastEditInfo').classList.add('hidden');
+    }
+
+    // Zeigt an, wer den Datensatz zuletzt gespeichert hat (Spalte updated_by,
+    // wird per DB-Trigger gesetzt - siehe sql/007_updated_by.sql).
+    // Bei Altdatensätzen, die seitdem nicht angefasst wurden, ist das leer.
+    function zeigeLetzteAenderung(participant) {
+      const info = document.getElementById('lastEditInfo');
+      if (!participant.updated_by) {
+        info.classList.add('hidden');
+        return;
+      }
+      const zeit = participant.updated_at
+        ? new Date(participant.updated_at).toLocaleString('de-DE', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
+        : null;
+      info.textContent = `✏️ Zuletzt gespeichert von ${participant.updated_by}${zeit ? ` am ${zeit}` : ''}`;
+      info.classList.remove('hidden');
     }
 
     function collectFormData() {
@@ -1234,7 +1254,8 @@ detailsDiv.innerHTML = `
       document.getElementById('classNameInput').value = participant.class_name || '';
       genderInput.value = participant.gender;
       editingId = participant.id;
-      
+      zeigeLetzteAenderung(participant);
+
       renderDisciplineForms();
       
       setTimeout(() => {
@@ -1499,7 +1520,7 @@ function parseCSV(content) {
     // CSV EXPORT
     // ============================================
     function exportCSV() {
-      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Klasse', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis', 'Offene Disziplinen'];
+      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Klasse', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis', 'Offene Disziplinen', 'Zuletzt von', 'Zuletzt am'];
 
       // Exportiert die aktuell gefilterte Liste (z.B. "Unvollständig"), nicht
       // zwangsläufig alle Teilnehmer - so wird der Export zur "Übersicht
@@ -1526,7 +1547,9 @@ function parseCSV(content) {
   points.koordination || 0,
   result.total,
   result.medal ? result.medal.charAt(0).toUpperCase() + result.medal.slice(1) : 'Nicht bestanden',
-  openDisciplines
+  openDisciplines,
+  p.updated_by || '',
+  p.updated_at ? new Date(p.updated_at).toLocaleString('de-DE') : ''
 ].join(';');
       });
       
