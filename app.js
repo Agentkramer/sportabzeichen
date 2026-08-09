@@ -594,12 +594,118 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     // ============================================
     function showLoginView() {
       document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('setPasswordView').classList.add('hidden');
       document.getElementById('appContent').classList.add('hidden');
     }
 
     function showAppView() {
       document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('setPasswordView').classList.add('hidden');
       document.getElementById('appContent').classList.remove('hidden');
+    }
+
+    // Erkennt, ob die Seite über einen Einladungs- oder Passwort-Zurücksetzen-Link
+    // aufgerufen wurde. Je nach Supabase-Konfiguration steht der Token im Hash
+    // (#access_token=...&type=invite) oder als ?code=... in der Query – deshalb
+    // werden beide Varianten geprüft.
+    function erkenneAuthFlow() {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const query = new URLSearchParams(window.location.search);
+
+      const fehler = hash.get('error_description') || query.get('error_description');
+      if (fehler) return { typ: 'fehler', text: fehler };
+
+      const typ = hash.get('type') || query.get('type');
+      if (typ === 'invite') return { typ: 'invite' };
+      if (typ === 'recovery') return { typ: 'recovery' };
+
+      // Bei aktivem PKCE-Flow steht der Typ nicht in der URL. Die einzigen
+      // Mail-Links, die diese App verschickt, sind Einladung und Zurücksetzen –
+      // beide sollen zum Passwort-Setzen führen.
+      if (query.get('code')) return { typ: 'invite' };
+
+      return null;
+    }
+
+    let authFlow = erkenneAuthFlow();
+
+    // URL bereinigen, damit ein Reload den Vorgang nicht erneut auslöst
+    function urlBereinigen() {
+      history.replaceState(null, '', window.location.pathname);
+    }
+
+    function showSetPasswordView(typ) {
+      setPasswordIntro.textContent = typ === 'recovery'
+        ? 'Vergib hier dein neues Passwort.'
+        : 'Willkommen! Vergib bitte ein Passwort für deinen Zugang.';
+      newPasswordInput.value = '';
+      newPasswordRepeatInput.value = '';
+      setPasswordError.classList.add('hidden');
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('appContent').classList.add('hidden');
+      setPasswordView.classList.remove('hidden');
+    }
+
+    async function handleSetPassword() {
+      const pw = newPasswordInput.value;
+      const pw2 = newPasswordRepeatInput.value;
+      setPasswordError.classList.add('hidden');
+
+      if (pw.length < 8) {
+        setPasswordError.textContent = 'Das Passwort muss mindestens 8 Zeichen lang sein.';
+        setPasswordError.classList.remove('hidden');
+        return;
+      }
+      if (pw !== pw2) {
+        setPasswordError.textContent = 'Die beiden Passwörter stimmen nicht überein.';
+        setPasswordError.classList.remove('hidden');
+        return;
+      }
+
+      setPasswordBtn.disabled = true;
+      const { error } = await db.auth.updateUser({ password: pw });
+      setPasswordBtn.disabled = false;
+
+      if (error) {
+        setPasswordError.textContent = 'Speichern fehlgeschlagen: ' + error.message;
+        setPasswordError.classList.remove('hidden');
+        return;
+      }
+
+      authFlow = null;
+      urlBereinigen();
+
+      const { data } = await db.auth.getSession();
+      if (data.session) {
+        await loadCurrentUserProfile(data.session.user.id);
+        applyRoleBasedUI();
+        showAppView();
+        loadParticipants();
+      } else {
+        showLoginView();
+      }
+    }
+
+    async function handleForgotPassword(e) {
+      e.preventDefault();
+      const email = loginEmailInput.value.trim();
+      loginError.classList.add('hidden');
+      loginInfo.classList.add('hidden');
+
+      if (!email) {
+        loginError.textContent = 'Bitte zuerst die E-Mail-Adresse eintragen.';
+        loginError.classList.remove('hidden');
+        return;
+      }
+
+      await db.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+
+      // Bewusst immer dieselbe Meldung, unabhängig davon, ob die Adresse
+      // existiert – sonst ließe sich darüber herausfinden, wer einen Zugang hat.
+      loginInfo.textContent = 'Falls ein Zugang zu dieser Adresse existiert, ist eine E-Mail mit einem Link unterwegs.';
+      loginInfo.classList.remove('hidden');
     }
 
     async function handleLogin() {
@@ -648,6 +754,25 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     }
 
     db.auth.onAuthStateChange(async (event, session) => {
+      // Abgelaufener oder bereits benutzter Link
+      if (authFlow?.typ === 'fehler') {
+        const meldung = authFlow.text;
+        authFlow = null;
+        urlBereinigen();
+        showLoginView();
+        loginError.textContent = 'Der Link ist ungültig oder abgelaufen: ' + meldung;
+        loginError.classList.remove('hidden');
+        return;
+      }
+
+      // Supabase meldet das Zurücksetzen auch über dieses Event
+      if (event === 'PASSWORD_RECOVERY') authFlow = { typ: 'recovery' };
+
+      if (session && authFlow) {
+        showSetPasswordView(authFlow.typ);
+        return;
+      }
+
       if (session) {
         await loadCurrentUserProfile(session.user.id);
         applyRoleBasedUI();
@@ -677,8 +802,16 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     const loginEmailInput = document.getElementById('loginEmail');
     const loginPasswordInput = document.getElementById('loginPassword');
     const loginError = document.getElementById('loginError');
+    const loginInfo = document.getElementById('loginInfo');
     const loginBtn = document.getElementById('loginBtn');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
     const logoutBtn = document.getElementById('logoutBtn');
+    const setPasswordView = document.getElementById('setPasswordView');
+    const setPasswordIntro = document.getElementById('setPasswordIntro');
+    const newPasswordInput = document.getElementById('newPassword');
+    const newPasswordRepeatInput = document.getElementById('newPasswordRepeat');
+    const setPasswordError = document.getElementById('setPasswordError');
+    const setPasswordBtn = document.getElementById('setPasswordBtn');
     const listView = document.getElementById('listView');
     const formView = document.getElementById('formView');
     const importView = document.getElementById('importView');
@@ -1605,6 +1738,12 @@ loginPasswordInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') handleLogin();
 });
 logoutBtn.addEventListener('click', handleLogout);
+
+setPasswordBtn.addEventListener('click', handleSetPassword);
+newPasswordRepeatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleSetPassword();
+});
+forgotPasswordLink.addEventListener('click', handleForgotPassword);
 
 adminBtn.addEventListener('click', () => {
   showAdmin();

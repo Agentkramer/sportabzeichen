@@ -28,7 +28,24 @@
       <input type="email" id="loginEmail" placeholder="E-Mail" autocomplete="username">
       <input type="password" id="loginPassword" placeholder="Passwort" autocomplete="current-password">
       <div id="loginError" class="login-error hidden"></div>
+      <div id="loginInfo" class="login-info hidden"></div>
       <button id="loginBtn" class="btn btn-primary btn-full">Anmelden</button>
+      <p style="text-align: center; margin-top: 1rem;">
+        <a href="#" id="forgotPasswordLink" style="color: #94a3b8; font-size: 0.8rem;">Passwort vergessen?</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Passwort festlegen (nach Einladung oder Zurücksetzen) -->
+  <div id="setPasswordView" class="hidden login-container">
+    <div class="login-card">
+      <div class="logo-icon" style="margin: 0 auto 1rem;">🔑</div>
+      <h1 style="text-align: center; margin-bottom: 0.5rem;">Passwort festlegen</h1>
+      <p id="setPasswordIntro" style="text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.5rem;"></p>
+      <input type="password" id="newPassword" placeholder="Neues Passwort" autocomplete="new-password">
+      <input type="password" id="newPasswordRepeat" placeholder="Passwort wiederholen" autocomplete="new-password">
+      <div id="setPasswordError" class="login-error hidden"></div>
+      <button id="setPasswordBtn" class="btn btn-primary btn-full">Passwort speichern</button>
     </div>
   </div>
 
