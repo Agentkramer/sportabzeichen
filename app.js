@@ -24,6 +24,32 @@ const AVAILABLE_CLASSES = [
     // ============================================
     const PERFORMANCE_DATA = {
       weiblich: {
+        "8-9": {
+          ausdauer: {
+            "800m_lauf": { unit: "min:sec", bronze: "05:35", silber: "04:50", gold: "04:10", lowerIsBetter: true },
+            "dauer_gelaendelauf": { unit: "min", bronze: 10, silber: 15, gold: 20, lowerIsBetter: false },
+            "schwimmen_200m": { unit: "min:sec", bronze: "08:00", silber: "07:00", gold: "05:55", lowerIsBetter: true },
+            "radfahren_5km": { unit: "min:sec", bronze: "27:00", silber: "24:00", gold: "21:00", lowerIsBetter: true },
+          },
+          kraft: {
+            "schlagball_80g": { unit: "m", bronze: 9, silber: 12, gold: 15, lowerIsBetter: false },
+            "medizinball_1kg": { unit: "m", bronze: 3.00, silber: 4.00, gold: 5.00, lowerIsBetter: false },
+            "standweitsprung": { unit: "m", bronze: 1.15, silber: 1.30, gold: 1.50, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
+          },
+          schnelligkeit: {
+            "lauf_30m": { unit: "sec", bronze: 7.4, silber: 6.6, gold: 5.7, lowerIsBetter: true },
+            "schwimmen_25m": { unit: "sec", bronze: 42.0, silber: 34.0, gold: 28.0, lowerIsBetter: true },
+            "radfahren_200m": { unit: "sec", bronze: 41.0, silber: 36.0, gold: 31.0, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
+          },
+          koordination: {
+            "zonenweitsprung": { unit: "Pkt", bronze: 24, silber: 27, gold: 30, lowerIsBetter: false },
+            "drehwurf": { unit: "Pkt", bronze: 18, silber: 21, gold: 27, lowerIsBetter: false },
+            "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 25, lowerIsBetter: false, note: "Grundsprung vorwärts ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
+          }
+        },
         "10-11": {
           ausdauer: {
             "800m_lauf": { unit: "min:sec", bronze: "05:20", silber: "04:40", gold: "04:00", lowerIsBetter: true },
@@ -131,9 +157,64 @@ const AVAILABLE_CLASSES = [
             "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 20, lowerIsBetter: false, note: "Kreuzdurchschlag ohne Zwischensprung" },
             "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
+        },
+        "18-19": {
+          ausdauer: {
+            "lauf_3000m": { unit: "min:sec", bronze: "20:50", silber: "18:50", gold: "16:50", lowerIsBetter: true },
+            "lauf_10km": { unit: "min:sec", bronze: "84:40", silber: "78:40", gold: "72:40", lowerIsBetter: true },
+            "nordic_walking_7_5km": { unit: "min:sec", bronze: "69:30", silber: "66:00", gold: "62:00", lowerIsBetter: true },
+            "schwimmen_800m": { unit: "min:sec", bronze: "24:00", silber: "21:10", gold: "18:25", lowerIsBetter: true },
+            "radfahren_20km": { unit: "min:sec", bronze: "57:30", silber: "52:00", gold: "46:30", lowerIsBetter: true },
+          },
+          kraft: {
+            "medizinball_2kg": { unit: "m", bronze: 8.00, silber: 9.00, gold: 10.00, lowerIsBetter: false },
+            "kugel_4kg": { unit: "m", bronze: 6.50, silber: 7.00, gold: 7.50, lowerIsBetter: false },
+            "steinstossen_5kg": { unit: "m", bronze: 10.65, silber: 11.25, gold: 11.85, lowerIsBetter: false },
+            "standweitsprung": { unit: "m", bronze: 1.65, silber: 1.85, gold: 2.05, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
+          },
+          schnelligkeit: {
+            "lauf_100m": { unit: "sec", bronze: 18.2, silber: 16.5, gold: 15.3, lowerIsBetter: true },
+            "schwimmen_25m": { unit: "sec", bronze: 29.5, silber: 24.0, gold: 18.5, lowerIsBetter: true },
+            "radfahren_200m": { unit: "sec", bronze: 24.0, silber: 22.0, gold: 19.5, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
+          },
+          koordination: {
+            "hochsprung": { unit: "m", bronze: 1.10, silber: 1.20, gold: 1.30, lowerIsBetter: false },
+            "weitsprung": { unit: "m", bronze: 3.40, silber: 3.70, gold: 4.00, lowerIsBetter: false },
+            "schleuderball_1kg": { unit: "m", bronze: 23.50, silber: 26.50, gold: 29.00, lowerIsBetter: false },
+            "seilspringen": { unit: "Anz", bronze: 5, silber: 10, gold: 15, lowerIsBetter: false, note: "Doppeldurchschlag mit oder ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
+          }
         }
       },
       maennlich: {
+        "8-9": {
+          ausdauer: {
+            "800m_lauf": { unit: "min:sec", bronze: "05:25", silber: "04:40", gold: "03:55", lowerIsBetter: true },
+            "dauer_gelaendelauf": { unit: "min", bronze: 12, silber: 17, gold: 23, lowerIsBetter: false },
+            "schwimmen_200m": { unit: "min:sec", bronze: "08:00", silber: "06:45", gold: "05:40", lowerIsBetter: true },
+            "radfahren_5km": { unit: "min:sec", bronze: "26:30", silber: "23:30", gold: "20:30", lowerIsBetter: true },
+          },
+          kraft: {
+            "schlagball_80g": { unit: "m", bronze: 17, silber: 20, gold: 23, lowerIsBetter: false },
+            "medizinball_1kg": { unit: "m", bronze: 3.00, silber: 4.00, gold: 5.00, lowerIsBetter: false },
+            "standweitsprung": { unit: "m", bronze: 1.30, silber: 1.50, gold: 1.65, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
+          },
+          schnelligkeit: {
+            "lauf_30m": { unit: "sec", bronze: 7.2, silber: 6.4, gold: 5.7, lowerIsBetter: true },
+            "schwimmen_25m": { unit: "sec", bronze: 41.0, silber: 33.0, gold: 26.0, lowerIsBetter: true },
+            "radfahren_200m": { unit: "sec", bronze: 38.0, silber: 33.0, gold: 28.0, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
+          },
+          koordination: {
+            "zonenweitsprung": { unit: "Pkt", bronze: 27, silber: 30, gold: 33, lowerIsBetter: false },
+            "drehwurf": { unit: "Pkt", bronze: 21, silber: 27, gold: 33, lowerIsBetter: false },
+            "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 25, lowerIsBetter: false, note: "Grundsprung vorwärts ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
+          }
+        },
         "10-11": {
           ausdauer: {
             "800m_lauf": { unit: "min:sec", bronze: "05:05", silber: "04:20", gold: "03:35", lowerIsBetter: true },
@@ -241,6 +322,35 @@ const AVAILABLE_CLASSES = [
             "seilspringen": { unit: "Anz", bronze: 10, silber: 15, gold: 20, lowerIsBetter: false, note: "Kreuzdurchschlag ohne Zwischensprung" },
             "geraetturnen": { type: "turnen", geraet: "Boden" },
           }
+        },
+        "18-19": {
+          ausdauer: {
+            "lauf_3000m": { unit: "min:sec", bronze: "17:50", silber: "15:50", gold: "13:50", lowerIsBetter: true },
+            "lauf_10km": { unit: "min:sec", bronze: "63:20", silber: "57:20", gold: "51:20", lowerIsBetter: true },
+            "nordic_walking_7_5km": { unit: "min:sec", bronze: "58:30", silber: "54:30", gold: "50:30", lowerIsBetter: true },
+            "schwimmen_800m": { unit: "min:sec", bronze: "22:35", silber: "19:50", gold: "17:00", lowerIsBetter: true },
+            "radfahren_20km": { unit: "min:sec", bronze: "47:00", silber: "42:30", gold: "38:30", lowerIsBetter: true },
+          },
+          kraft: {
+            "medizinball_2kg": { unit: "m", bronze: 11.00, silber: 13.00, gold: 14.00, lowerIsBetter: false },
+            "kugel_6kg": { unit: "m", bronze: 7.75, silber: 8.25, gold: 8.75, lowerIsBetter: false },
+            "steinstossen_10kg": { unit: "m", bronze: 9.30, silber: 10.10, gold: 10.95, lowerIsBetter: false },
+            "standweitsprung": { unit: "m", bronze: 2.10, silber: 2.30, gold: 2.50, lowerIsBetter: false },
+            "geraetturnen": { type: "turnen", geraet: "Reck" },
+          },
+          schnelligkeit: {
+            "lauf_100m": { unit: "sec", bronze: 16.0, silber: 14.6, gold: 13.2, lowerIsBetter: true },
+            "schwimmen_25m": { unit: "sec", bronze: 28.0, silber: 23.0, gold: 17.5, lowerIsBetter: true },
+            "radfahren_200m": { unit: "sec", bronze: 20.5, silber: 18.0, gold: 15.5, lowerIsBetter: true },
+            "geraetturnen": { type: "turnen", geraet: "Sprung" },
+          },
+          koordination: {
+            "hochsprung": { unit: "m", bronze: 1.30, silber: 1.40, gold: 1.50, lowerIsBetter: false },
+            "weitsprung": { unit: "m", bronze: 4.50, silber: 4.80, gold: 5.10, lowerIsBetter: false },
+            "schleuderball_1kg": { unit: "m", bronze: 31.50, silber: 36.00, gold: 40.50, lowerIsBetter: false },
+            "seilspringen": { unit: "Anz", bronze: 5, silber: 10, gold: 15, lowerIsBetter: false, note: "Doppeldurchschlag mit oder ohne Zwischensprung" },
+            "geraetturnen": { type: "turnen", geraet: "Boden" },
+          }
         }
       }
     };
@@ -268,6 +378,18 @@ const AVAILABLE_CLASSES = [
       "schleuderball_1kg": "Schleuderball (1kg)",
       "seilspringen": "Seilspringen",
       "geraetturnen": "Gerätturnen",
+      "radfahren_5km": "5km Radfahren",
+      "lauf_30m": "30m Lauf",
+      "zonenweitsprung": "Zonenweitsprung (Punkte)",
+      "lauf_3000m": "3000m Lauf",
+      "lauf_10km": "10km Lauf",
+      "nordic_walking_7_5km": "7,5km Nordic Walking",
+      "schwimmen_800m": "800m Schwimmen",
+      "radfahren_20km": "20km Radfahren",
+      "medizinball_2kg": "Medizinball (2kg)",
+      "kugel_6kg": "Kugelstoßen (6kg)",
+      "steinstossen_10kg": "Steinstoßen (10kg)",
+      "steinstossen_5kg": "Steinstoßen (5kg)",
 
     };
 
@@ -296,8 +418,8 @@ function populateBirthYearDropdown() {
   // Leere erst vorhandene Optionen (außer der ersten)
   select.innerHTML = '<option value="">Geburtsjahr wählen</option>';
   
-  // Schüler zwischen 10 und 17 Jahren
-  for (let year = currentYear - 17; year <= currentYear - 10; year++) {
+  // Schüler zwischen 8 und 19 Jahren
+  for (let year = currentYear - 19; year <= currentYear - 8; year++) {
     const option = document.createElement('option');
     option.value = year;
     option.textContent = year;
@@ -363,10 +485,12 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     }
 
     function getAgeGroup(age) {
+      if (age >= 8 && age <= 9) return "8-9";
       if (age >= 10 && age <= 11) return "10-11";
       if (age >= 12 && age <= 13) return "12-13";
       if (age >= 14 && age <= 15) return "14-15";
       if (age >= 16 && age <= 17) return "16-17";
+      if (age >= 18 && age <= 19) return "18-19";
       return null;
     }
 
@@ -870,8 +994,8 @@ function renderDisciplineForms() {
   
   const age = calculateAgeForYear(birthYear);
   
-  if (age < 10 || age > 17) {
-    disciplinesForms.innerHTML = '<div class="form-section"><p style="color: #94a3b8; text-align: center;">Ungültiges Geburtsjahr (Alter muss 10-17 Jahre sein)</p></div>';
+  if (age < 8 || age > 19) {
+    disciplinesForms.innerHTML = '<div class="form-section"><p style="color: #94a3b8; text-align: center;">Ungültiges Geburtsjahr (Alter muss 8-19 Jahre sein)</p></div>';
     return;
   }
       
@@ -1308,8 +1432,8 @@ function parseCSV(content) {
       continue; // Ungültige Zeile überspringen
     }
     
-    // Geburtsjahr validieren (zwischen 2009 und 2016 für 10-17 Jährige)
-    if (firstName && birthYear >= currentYear - 17 && birthYear <= currentYear - 10) {
+    // Geburtsjahr validieren (für 8-19 Jährige)
+    if (firstName && birthYear >= currentYear - 19 && birthYear <= currentYear - 8) {
       results.push({ 
         external_id: externalId,
         first_name: firstName, 

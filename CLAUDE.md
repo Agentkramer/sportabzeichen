@@ -2,7 +2,7 @@
 
 Progressive Web App zur Verwaltung und automatischen Auswertung des Deutschen
 Sportabzeichens (DSA) an einer Schule. Nutzer sind Sportlehrer*innen, die
-Leistungen von Schüler*innen (10–17 Jahre) in 4 Disziplingruppen erfassen.
+Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
 
 - **Live-URL:** https://agentkramer.github.io/sportabzeichen/
 - **Repo:** https://github.com/agentkramer/sportabzeichen
