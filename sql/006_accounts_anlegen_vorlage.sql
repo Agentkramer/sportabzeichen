@@ -85,6 +85,10 @@ revoke all on function public.tmp_create_account(text, text) from authenticated;
 -- ============================================================
 -- SCHRITT 2: ERST EINEN Testaccount anlegen und Login prüfen!
 -- ============================================================
+-- ACHTUNG: Passwort hier nur zum Ausführen einsetzen und danach WIEDER
+-- DURCH DEN PLATZHALTER ERSETZEN – diese Datei landet im öffentlichen Repo.
+-- Besser noch: die Zeile in die Kopie außerhalb des Repos übernehmen und
+-- von dort ausführen.
 select public.tmp_create_account('test-sql@dsa-intern.local', 'PASSWORT-HIER-EINSETZEN');
 
 -- Jetzt in der App einloggen. Erst wenn das klappt, weitermachen.
