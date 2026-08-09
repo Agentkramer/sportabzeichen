@@ -1,2 +1,10 @@
 .DS_Store
 backups/
+
+# Zugangsdaten niemals ins (öffentliche) Repo.
+# Die echten Dateien liegen in ../DSA-PWA-Zugangsdaten/ – das hier ist
+# nur ein Sicherheitsnetz, falls doch mal eine Kopie hier landet.
+*Zugangsdaten*
+*zugangsdaten*
+*_accounts.sql
+*.env
