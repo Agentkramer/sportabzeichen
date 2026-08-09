@@ -12,11 +12,17 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
 - Vanilla HTML/CSS/JavaScript (kein Framework, bewusste Entscheidung)
 - Supabase (PostgreSQL) als Backend, Zugriff über Supabase-Client/REST-API
 - Hosting: GitHub Pages (nur statische Dateien, kein eigenes Backend)
-- PWA mit Service Worker (aktuell v38 – Version bei jedem Deployment hochzählen,
-  sonst greift der Cache nicht neu)
-- GitHub Actions Workflow `.github/workflows/keep-supabase-alive.yml` pingt
-  Supabase regelmäßig an, damit das Projekt wegen Inaktivität nicht pausiert wird.
-  Nutzt die Repository Secrets `SUPABASE_URL` und `SUPABASE_PUBLISHABLE_KEY`.
+- PWA mit Service Worker (aktuell v41 – Version bei jedem Deployment hochzählen,
+  sonst greift der Cache nicht neu; hält sich hartnäckig, im Zweifel Hard-Reload
+  oder Service Worker in den DevTools abmelden)
+- Keep-Alive gegen die Supabase-Pausierung (Free Tier pausiert nach 7 Tagen
+  Inaktivität) läuft über einen externen Cronjob bei **cron-job.org**, der
+  `POST /rest/v1/rpc/bump_keepalive` aufruft (Header `apikey`). Der frühere
+  GitHub-Actions-Workflow wurde entfernt: GitHub deaktiviert geplante Workflows
+  nach 60 Tagen ohne Commit – bei unregelmäßiger Weiterentwicklung also
+  unbrauchbar. Ein reiner Lese-Ping auf `participants` reicht übrigens nicht,
+  weil er seit RLS als `anon` ein leeres Ergebnis liefert; `bump_keepalive()`
+  (siehe `sql/004_keepalive.sql`) erzeugt stattdessen einen echten Schreibvorgang.
 
 ## Datenstruktur
 
@@ -74,6 +80,32 @@ Accounts werden weiterhin manuell im Supabase-Dashboard angelegt.
 **Phase 3 (optional, noch kein festgelegter Zeitpunkt):** Multi-Tenancy für
 mehrere Schulen.
 
+## Zusatzmodul: Aktionstag-Wertung (`aktionstag.js`)
+
+Schulinterne Zusatzwertung, **unabhängig vom Sportabzeichen**: ermittelt pro
+Jahrgangsstufe die drei besten Jungen und Mädchen (🏆-Button im Header).
+Verrechnet nicht die DSA-Punkte (0–3 pro Disziplin, viel zu grob für eine
+Rangfolge), sondern die **Rohleistungen** aus Sprint, 800m, Ballwurf und
+Weitsprung, die am Aktionstag alle Kinder der Jahrgänge 5/6 absolvieren.
+
+- Faktoren stehen im `CONFIG`-Block ganz oben in der Datei und sind so
+  gewählt, dass jede Disziplin ~300 Punkte Spanne beisteuert. **Nach dem
+  ersten Aktionstag anhand der echten Leistungsspannen nachjustieren** – die
+  aktuellen Werte beruhen auf geschätzten Spannen.
+- Nur Teilnehmer mit **allen vier** Werten werden gewertet (eine fehlende
+  Disziplin würde sonst rechnerisch Punkte bringen).
+- Warnt, wenn in einem Jahrgang gemischte Wurfgeräte erfasst sind
+  (Schlagball 80g vs. Wurfball 200g – die DOSB-Tabellen wechseln bei Jungen
+  ab 12 Jahren das Gerät, die Weiten sind dann nicht vergleichbar).
+- Für `examiner` ist die Rangliste durch RLS unvollständig; darauf wird in
+  der Ansicht hingewiesen.
+
+**Bewusst als entfernbares Modul angelegt** (falls es sich nicht bewährt):
+Button, Ansicht und Styles werden zur Laufzeit selbst erzeugt, `app.js` und
+`styles.css` sind unberührt. Entfernen = Script-Zeile in `index.html` löschen,
+`aktionstag.js` löschen, Eintrag aus `urlsToCache` in `sw.js` entfernen – und
+diesen Abschnitt hier.
+
 ## Arbeitsstil
 
 - Bitte auf Deutsch antworten.
@@ -81,8 +113,10 @@ mehrere Schulen.
   schrittweise anleiten und kurz erklären *warum*, nicht nur *was*.
 - Ich implementiere meist selbst nach Anleitung; bei komplexeren Features
   gerne auch vollständige Datei-Vorschläge.
-- Ich teste lokal über `file://` (Service-Worker-Fehler dabei ignorieren)
-  und live auf GitHub Pages.
+- Lokales Testen läuft über einen kleinen Server (`.claude/launch.json`,
+  `python3 -m http.server 8765`), nicht mehr über `file://` – seit dem Login
+  wird `localStorage` für die Supabase-Session gebraucht, das über `file://`
+  unzuverlässig ist. Zusätzlich live auf GitHub Pages testen.
 - Bei jedem Deployment: Service-Worker-Version hochzählen (Cache-Bump nicht
   vergessen).
 - Das GitHub Personal Access Token liegt im macOS Keychain als
