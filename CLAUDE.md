@@ -17,12 +17,13 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
   oder Service Worker in den DevTools abmelden)
 - Keep-Alive gegen die Supabase-Pausierung (Free Tier pausiert nach 7 Tagen
   Inaktivität) läuft über einen externen Cronjob bei **cron-job.org**, der
-  `POST /rest/v1/rpc/bump_keepalive` aufruft (Header `apikey`). Der frühere
-  GitHub-Actions-Workflow wurde entfernt: GitHub deaktiviert geplante Workflows
-  nach 60 Tagen ohne Commit – bei unregelmäßiger Weiterentwicklung also
-  unbrauchbar. Ein reiner Lese-Ping auf `participants` reicht übrigens nicht,
-  weil er seit RLS als `anon` ein leeres Ergebnis liefert; `bump_keepalive()`
-  (siehe `sql/004_keepalive.sql`) erzeugt stattdessen einen echten Schreibvorgang.
+  `POST /rest/v1/keep_alive` aufruft (Header `apikey`, Body `{}`) und damit eine
+  Zeile in die Tabelle `keep_alive` schreibt. Der frühere GitHub-Actions-Workflow
+  wurde entfernt: GitHub deaktiviert geplante Workflows nach 60 Tagen ohne Commit
+  – bei unregelmäßiger Weiterentwicklung also unbrauchbar. Ein reiner Lese-Ping
+  auf `participants` reicht übrigens nicht, weil er seit RLS als `anon` ein
+  leeres Ergebnis liefert und offenbar nicht als Aktivität zählt – es braucht
+  einen echten Schreibvorgang. Details und bekannte Schwächen: `sql/004_keepalive.sql`.
 
 ## Datenstruktur
 
@@ -49,7 +50,14 @@ Tabelle `profiles` (Multi-User, seit Phase 2):
   `examiner` sieht/bearbeitet nur Teilnehmer der eigenen `classes` und darf
   nicht löschen; Teilnehmer ohne Klasse sind nur für `admin` sichtbar
 - Schema-Änderungen an der DB liegen dokumentiert (aber nicht automatisch
-  ausführbar) unter `sql/*.sql` – im Supabase SQL Editor manuell ausführen
+  ausführbar) unter `sql/*.sql` – im Supabase SQL Editor manuell ausführen.
+  **Weil das von Hand passiert, können Datei und Datenbank auseinanderlaufen.**
+  `sql/008_ist_stand_pruefen.sql` liest den tatsächlichen Stand aus (reine
+  Leseabfragen) – nach jeder Schema-Änderung einmal laufen lassen und
+  abgleichen. Genau so wurden zwei Abweichungen gefunden: das Altersconstraint
+  aus Phase 1, das den Import blockierte, und die nie angelegte Keep-Alive-
+  Tabelle aus `004`. Dateien mit dem Hinweis „NICHT AUSFÜHREN" (`001`, `004`)
+  beschreiben Bestand, sind also keine Migrationen.
 
 ## Datenschutz
 

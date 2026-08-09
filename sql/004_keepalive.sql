@@ -1,41 +1,92 @@
--- Fix für Keep-Alive-Ping: participants liefert für "anon" (ungeloggter
--- Cronjob-Request) seit der RLS-Einführung (Schritt 3) ein leeres
--- Ergebnis - das zählt bei Supabase offenbar nicht zuverlässig als
--- Aktivität, obwohl der Request technisch mit 200 OK durchläuft.
+-- ============================================================
+-- Keep-Alive gegen die Supabase-Pausierung
+-- ============================================================
 --
--- Lösung: eine eigene, winzige Tabelle nur für den Ping-Zweck, plus eine
--- eng gefasste Funktion, die einen echten Schreibvorgang auslöst.
--- "anon" bekommt KEIN direktes Schreibrecht auf die Tabelle (keine RLS-
--- Policy dafür), sondern darf nur genau diese eine Funktion aufrufen -
--- participants/profiles bleiben komplett unberührt.
+-- NICHT AUSFÜHREN. Diese Datei beschreibt den tatsächlichen Stand.
 --
--- Im Supabase Dashboard unter "SQL Editor" ausführen.
+-- Hintergrund: Supabase pausiert Projekte im Free Tier nach 7 Tagen
+-- ohne Datenbankaktivität. Ein externer Cronjob (cron-job.org) hält das
+-- Projekt wach, indem er in regelmäßigen Abständen eine Zeile schreibt.
+--
+-- Warum ein Schreibvorgang und kein Lese-Ping: Ein GET auf
+-- `participants` liefert seit Einführung der RLS (003) als `anon` ein
+-- leeres Ergebnis. Der Request ist zwar formal erfolgreich (200 OK),
+-- zählte aber offenbar nicht zuverlässig als Aktivität – das Projekt
+-- wurde trotz laufendem Cronjob pausiert.
+--
+-- ------------------------------------------------------------
+-- ACHTUNG – Korrektur am 2026-08-09
+-- ------------------------------------------------------------
+-- Diese Datei beschrieb ursprünglich eine Tabelle `keepalive` samt
+-- Funktion `bump_keepalive()`. Beides wurde nie angelegt; die Inventur
+-- (008) hat gezeigt, dass stattdessen die untenstehende, schon vorher
+-- vorhandene Lösung im Einsatz ist. Die Datei wurde an die Realität
+-- angepasst.
+-- ============================================================
 
-create table if not exists public.keepalive (
-  id int primary key default 1,
-  last_ping timestamptz not null default now(),
-  ping_count int not null default 0,
-  constraint keepalive_singleton check (id = 1)
-);
 
-insert into public.keepalive (id) values (1) on conflict (id) do nothing;
+-- ------------------------------------------------------------
+-- Tatsächlicher Stand
+-- ------------------------------------------------------------
+-- create table public.keep_alive (
+--   id        serial primary key,
+--   pinged_at timestamptz default now()
+-- );
+--
+-- alter table public.keep_alive enable row level security;
+--
+-- create policy "Allow anon inserts" on public.keep_alive
+--   for insert to anon with check (true);
 
--- RLS aktiv, aber bewusst OHNE Policies für anon/authenticated ->
--- direkter Tabellenzugriff von außen ist komplett gesperrt.
-alter table public.keepalive enable row level security;
 
-create function public.bump_keepalive()
-returns void
-language sql
-security definer
-set search_path = public
-as $$
-  update public.keepalive
-  set last_ping = now(), ping_count = ping_count + 1
-  where id = 1;
-$$;
+-- ------------------------------------------------------------
+-- Konfiguration des Cronjobs (cron-job.org)
+-- ------------------------------------------------------------
+-- URL:     https://<projekt>.supabase.co/rest/v1/keep_alive
+-- Methode: POST
+-- Header:  apikey: <publishable key>
+--          Content-Type: application/json
+-- Body:    {}
+--
+-- Der publishable Key steht ohnehin im Frontend-Code und ist kein
+-- Geheimnis. Die Policy oben erlaubt `anon` genau eine Sache: Zeilen in
+-- diese eine Tabelle einzufügen. Lesen, Ändern und Löschen sind nicht
+-- erlaubt, andere Tabellen sind davon nicht berührt.
 
--- Nur diese eine Funktion darf von "anon" (also vom Cronjob ohne Login)
--- aufgerufen werden - die Funktion selbst läuft mit erhöhten Rechten
--- (security definer) und umgeht dabei die RLS-Sperre von oben.
-grant execute on function public.bump_keepalive() to anon;
+
+-- ------------------------------------------------------------
+-- Zwei bekannte Schwächen (bisher bewusst in Kauf genommen)
+-- ------------------------------------------------------------
+-- 1. Die Tabelle wächst unbegrenzt. Bei der aktuellen Taktung unkritisch,
+--    aber gelegentlich aufräumen schadet nicht:
+--
+--    delete from public.keep_alive where pinged_at < now() - interval '90 days';
+--
+-- 2. Weil `anon` einfügen darf und der Key öffentlich ist, könnte
+--    theoretisch jeder beliebig viele Zeilen erzeugen und damit den
+--    500-MB-Speicher des Free Tier vollschreiben. Unwahrscheinlich, aber
+--    möglich. Wer das schließen will, ersetzt die Policy durch eine
+--    Funktion, die nur eine einzige Zeile fortschreibt:
+--
+--    create table public.keep_alive_single (
+--      id int primary key default 1, last_ping timestamptz not null default now(),
+--      constraint keep_alive_single_row check (id = 1)
+--    );
+--    insert into public.keep_alive_single (id) values (1) on conflict do nothing;
+--    alter table public.keep_alive_single enable row level security;  -- ohne Policies
+--
+--    create function public.bump_keepalive() returns void
+--    language sql security definer set search_path = public as $$
+--      update public.keep_alive_single set last_ping = now() where id = 1;
+--    $$;
+--    grant execute on function public.bump_keepalive() to anon;
+--
+--    Der Cronjob ruft dann POST /rest/v1/rpc/bump_keepalive auf.
+--    Vorteil: kein direkter Tabellenzugriff für anon, konstante Größe.
+
+
+-- ------------------------------------------------------------
+-- Kontrolle
+-- ------------------------------------------------------------
+-- select count(*) as pings, max(pinged_at) as letzter_ping
+-- from public.keep_alive;
