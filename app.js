@@ -401,6 +401,64 @@ const AVAILABLE_CLASSES = [
     };
 
     // ============================================
+    // VOREINGESTELLTE ÜBUNGEN
+    // ============================================
+    // Am Aktionstag und beim Sportfest absolvieren alle Kinder dieselben
+    // Disziplinen – die Übung bei jedem Datensatz neu aus der Liste zu suchen
+    // ist reine Klickarbeit. Deshalb ist in leeren Disziplingruppen schon eine
+    // Übung vorausgewählt.
+    //
+    // Reihenfolge der Suche:
+    //   1. die Übung, die auf diesem Gerät zuletzt tatsächlich benutzt wurde
+    //   2. die erste Übung aus dieser Liste, die es in der Altersgruppe gibt
+    // Mehrere Einträge pro Gruppe, weil die DOSB-Tabellen je nach Alter und
+    // Geschlecht andere Übungen führen (z.B. wechselt das Wurfgerät bei Jungen
+    // ab 12 Jahren von Schlagball auf Wurfball).
+    //
+    // WICHTIG: Eine Voreinstellung legt KEINE Daten an. Gespeichert wird eine
+    // Disziplingruppe erst, wenn auch ein Wert eingetragen ist (collectFormData).
+    const STANDARD_UEBUNGEN = {
+      ausdauer:      ['800m_lauf', 'lauf_3000m', 'dauer_gelaendelauf'],
+      kraft:         ['schlagball_80g', 'wurfball_200g', 'kugel_3kg', 'standweitsprung'],
+      schnelligkeit: ['lauf_50m', 'lauf_100m', 'lauf_30m'],
+      koordination:  ['weitsprung', 'zonenweitsprung', 'hochsprung']
+    };
+
+    const ZULETZT_UEBUNGEN_KEY = 'dsa_zuletzt_uebungen';
+
+    function zuletztGenutzteUebungen() {
+      try {
+        const gespeichert = JSON.parse(localStorage.getItem(ZULETZT_UEBUNGEN_KEY));
+        if (gespeichert && typeof gespeichert === 'object') return gespeichert;
+      } catch (e) {
+        // Kaputter Eintrag darf das Formular nicht blockieren
+      }
+      return {};
+    }
+
+    // Merkt sich, was tatsächlich benutzt wurde – nur Gruppen mit echtem Wert,
+    // damit eine ungenutzte Voreinstellung sich nicht selbst bestätigt.
+    function merkeGenutzteUebungen(results) {
+      const gemerkt = zuletztGenutzteUebungen();
+      Object.entries(results).forEach(([catKey, eintrag]) => {
+        if (eintrag?.exercise && eintrag.value !== '') gemerkt[catKey] = eintrag.exercise;
+      });
+      localStorage.setItem(ZULETZT_UEBUNGEN_KEY, JSON.stringify(gemerkt));
+    }
+
+    // Welche Übung soll in einer leeren Disziplingruppe vorausgewählt sein?
+    // Gibt '' zurück, wenn nichts davon in dieser Altersgruppe existiert.
+    function voreingestellteUebung(catKey, data) {
+      const verfuegbar = data?.[catKey];
+      if (!verfuegbar) return '';
+
+      const zuletzt = zuletztGenutzteUebungen()[catKey];
+      if (zuletzt && verfuegbar[zuletzt]) return zuletzt;
+
+      return (STANDARD_UEBUNGEN[catKey] || []).find(key => verfuegbar[key]) || '';
+    }
+
+    // ============================================
     // HILFSFUNKTIONEN
     // ============================================
     
@@ -1378,11 +1436,13 @@ function renderDisciplineForms() {
       // Event-Listener für Übungsauswahl
       document.querySelectorAll('.exercise-select').forEach(select => {
         select.addEventListener('change', () => {
-          const catKey = select.closest('[data-category]').dataset.category;
-          updateExerciseInfo(catKey);
+          const section = select.closest('[data-category]');
+          // Sobald jemand selbst wählt, ist es keine Voreinstellung mehr
+          entferneVoreinstellungsHinweis(section);
+          updateExerciseInfo(section.dataset.category);
         });
       });
-      
+
       Object.entries(currentResults).forEach(([cat, result]) => {
         const section = document.querySelector(`[data-category="${cat}"]`);
         if (section && result.exercise) {
@@ -1403,6 +1463,37 @@ function renderDisciplineForms() {
           }
         }
       });
+
+      // Zum Schluss: alle Gruppen, in denen jetzt noch nichts steht, auf die
+      // Voreinstellung setzen. Bewusst nach dem Wiederherstellen - eine
+      // vorhandene Auswahl wird nie überschrieben.
+      setzeVoreinstellungen(data);
+    }
+
+    // Setzt in allen noch leeren Disziplingruppen die voreingestellte Übung
+    // und markiert sie sichtbar – niemand soll aus Versehen eine Leistung in
+    // die falsche Disziplin eintragen, weil dort schon etwas stand.
+    function setzeVoreinstellungen(data) {
+      Object.keys(CATEGORIES).forEach(catKey => {
+        const section = document.querySelector(`[data-category="${catKey}"]`);
+        const select = section?.querySelector('.exercise-select');
+        if (!select || select.value) return;   // schon gewählt: nicht anfassen
+
+        const uebung = voreingestellteUebung(catKey, data);
+        if (!uebung) return;
+
+        select.value = uebung;
+        updateExerciseInfo(catKey);
+
+        const hinweis = document.createElement('div');
+        hinweis.className = 'voreinstellung-hinweis';
+        hinweis.textContent = '↩︎ Voreinstellung – bei Bedarf ändern';
+        select.insertAdjacentElement('afterend', hinweis);
+      });
+    }
+
+    function entferneVoreinstellungsHinweis(section) {
+      section?.querySelector('.voreinstellung-hinweis')?.remove();
     }
 
     function updateExerciseInfo(catKey) {
@@ -1653,8 +1744,12 @@ detailsDiv.innerHTML = `
             const select = section.querySelector('.exercise-select');
             if (select && result.exercise) {
               select.value = result.exercise;
+              // Hier steht eine gespeicherte Übung, keine Voreinstellung mehr –
+              // renderDisciplineForms() hat den Hinweis vorher gesetzt, weil zu
+              // dem Zeitpunkt noch nichts ausgewählt war.
+              entferneVoreinstellungsHinweis(section);
               updateExerciseInfo(cat);
-              
+
               setTimeout(() => {
                 const valueInput = section.querySelector('.value-input');
                 if (valueInput && result.value) {
@@ -1703,6 +1798,11 @@ detailsDiv.innerHTML = `
         );
         if (!weiter) return;
       }
+
+      // Was hier tatsächlich benutzt wurde, ist beim nächsten Datensatz die
+      // Voreinstellung – so stellt sich das Formular von selbst auf den
+      // Aktionstag bzw. das Sportfest ein, ohne Konfiguration.
+      merkeGenutzteUebungen(data.results);
 
       await saveParticipantToDb(data);
       hideForm();

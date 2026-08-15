@@ -12,7 +12,7 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
 - Vanilla HTML/CSS/JavaScript (kein Framework, bewusste Entscheidung)
 - Supabase (PostgreSQL) als Backend, Zugriff über Supabase-Client/REST-API
 - Hosting: GitHub Pages (nur statische Dateien, kein eigenes Backend)
-- PWA mit Service Worker (aktuell v45 – Version bei jedem Deployment hochzählen,
+- PWA mit Service Worker (aktuell v46 – Version bei jedem Deployment hochzählen,
   sonst greift der Cache nicht neu; hält sich hartnäckig, im Zweifel Hard-Reload
   oder Service Worker in den DevTools abmelden)
 - Keep-Alive gegen die Supabase-Pausierung (Free Tier pausiert nach 7 Tagen
@@ -127,6 +127,23 @@ Die Prüflogik selbst steht in `app.js`, nicht hier – dieselbe Regel prüft im
 Formular, in dieser Ansicht und in der Export-Spalte „Auffälligkeiten".
 Entfernen wie beim Aktionstag-Modul: Script-Zeile in `index.html`, Datei,
 `urlsToCache` in `sw.js`.
+
+## Voreingestellte Übungen
+
+Am Aktionstag und beim Sportfest machen alle Kinder dieselben Disziplinen –
+deshalb ist in jeder noch leeren Disziplingruppe schon eine Übung ausgewählt
+(`STANDARD_UEBUNGEN` in `app.js`), sichtbar markiert mit „↩︎ Voreinstellung".
+Vorrang hat, was auf dem Gerät zuletzt tatsächlich benutzt wurde
+(`localStorage`, pro Disziplingruppe) – das Formular stellt sich also von
+selbst auf die laufende Veranstaltung ein. Die konfigurierten Listen sind
+Fallbacks und mehrfach belegt, weil die DOSB-Tabellen je nach Alter und
+Geschlecht andere Übungen führen (8-Jährige laufen 30m statt 50m, Jungen ab
+12 werfen Wurfball statt Schlagball).
+
+**Eine Voreinstellung legt keine Daten an:** gespeichert wird eine Gruppe erst,
+wenn auch ein Wert eingetragen ist. Gemerkt wird ebenfalls nur, was mit einem
+Wert benutzt wurde – sonst würde eine ungenutzte Voreinstellung sich selbst
+bestätigen. Eine gespeicherte Übung wird nie überschrieben.
 
 ## CSV-Export
 

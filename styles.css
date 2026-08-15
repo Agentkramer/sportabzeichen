@@ -390,6 +390,13 @@
       margin-top: 0.25rem;
     }
 
+    /* Kennzeichnet eine automatisch vorausgewählte Übung */
+    .voreinstellung-hinweis {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin: -0.5rem 0 0.75rem 0.25rem;
+    }
+
     /* Rückmeldung zur Eingabe-Prüfung (siehe pruefeEingabefeld in app.js) */
     .value-hint {
       font-size: 0.75rem;
