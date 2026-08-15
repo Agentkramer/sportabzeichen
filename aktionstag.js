@@ -264,12 +264,21 @@
     };
   }
 
-  // Top N inklusive aller Punktgleichen auf dem letzten Platz
+  // Es werden PLÄTZE vergeben, nicht Personen gezählt: gesucht sind die drei
+  // besten Punktzahlen, und auf jeder stehen alle, die sie erreicht haben.
+  // Beispiel 100 / 90 / 90 / 80 -> 1., 2., 2., 3. – der dritte Platz wird also
+  // trotz Gleichstand vergeben, dafür stehen vier Kinder auf dem Treppchen.
+  // (Vorher wurde ab Platz 3 abgeschnitten und der Gleichstand hat den letzten
+  // Platz "aufgefressen".)
+  function punktRaenge(eintraege) {
+    return [...new Set(eintraege.map(e => e.punkte))].sort((a, b) => b - a);
+  }
+
   function bestenliste(eintraege) {
-    const sortiert = [...eintraege].sort((a, b) => b.punkte - a.punkte);
-    if (sortiert.length <= CONFIG.anzahlPlaetze) return sortiert;
-    const grenze = sortiert[CONFIG.anzahlPlaetze - 1].punkte;
-    return sortiert.filter(e => e.punkte >= grenze);
+    const besteRaenge = punktRaenge(eintraege).slice(0, CONFIG.anzahlPlaetze);
+    return [...eintraege]
+      .filter(e => besteRaenge.includes(e.punkte))
+      .sort((a, b) => b.punkte - a.punkte);
   }
 
   // ============================================================
@@ -287,13 +296,11 @@
       `;
     }
 
-    // Gleiche Punktzahl = gleicher Platz
-    let letztePunkte = null;
-    let letzterPlatz = 0;
-    const zeilen = liste.map((e, i) => {
-      const platz = e.punkte === letztePunkte ? letzterPlatz : i + 1;
-      letztePunkte = e.punkte;
-      letzterPlatz = platz;
+    // Gleiche Punktzahl = gleicher Platz, der nächste Rang zählt trotzdem
+    // weiter (1., 2., 2., 3. statt 1., 2., 2., 4.)
+    const raenge = punktRaenge(liste);
+    const zeilen = liste.map(e => {
+      const platz = raenge.indexOf(e.punkte) + 1;
 
       const gleichstand = liste.filter(x => x.punkte === e.punkte).length > 1;
       const medaille = platz === 1 ? '🥇' : platz === 2 ? '🥈' : platz === 3 ? '🥉' : `${platz}.`;

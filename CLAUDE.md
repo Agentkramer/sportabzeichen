@@ -12,7 +12,7 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
 - Vanilla HTML/CSS/JavaScript (kein Framework, bewusste Entscheidung)
 - Supabase (PostgreSQL) als Backend, Zugriff über Supabase-Client/REST-API
 - Hosting: GitHub Pages (nur statische Dateien, kein eigenes Backend)
-- PWA mit Service Worker (aktuell v44 – Version bei jedem Deployment hochzählen,
+- PWA mit Service Worker (aktuell v45 – Version bei jedem Deployment hochzählen,
   sonst greift der Cache nicht neu; hält sich hartnäckig, im Zweifel Hard-Reload
   oder Service Worker in den DevTools abmelden)
 - Keep-Alive gegen die Supabase-Pausierung (Free Tier pausiert nach 7 Tagen
@@ -151,7 +151,15 @@ Weitsprung, die am Aktionstag alle Kinder der Jahrgänge 5/6 absolvieren.
   ersten Aktionstag anhand der echten Leistungsspannen nachjustieren** – die
   aktuellen Werte beruhen auf geschätzten Spannen.
 - Nur Teilnehmer mit **allen vier** Werten werden gewertet (eine fehlende
-  Disziplin würde sonst rechnerisch Punkte bringen).
+  Disziplin würde sonst rechnerisch Punkte bringen). Datensätze mit einer
+  Fehleingabe (Status `fehler` aus `pruefeLeistung`) bleiben ebenfalls
+  ungewertet – `3,47` wäre hier eine 800m-Zeit von 3,47 Sekunden und damit
+  ein sicherer erster Platz.
+- Vergeben werden **Plätze, nicht Personen**: gesucht sind die drei besten
+  Punktzahlen, auf jeder stehen alle, die sie erreicht haben (100/90/90/80
+  ergibt 1., 2., 2., 3.). Bei Gleichstand steht also mehr als ein Kind auf
+  einer Stufe, aber der dritte Platz wird trotzdem vergeben. Sonderfall: sind
+  alle punktgleich, gibt es nur erste Plätze – niemand war schlechter.
 - Warnt, wenn in einem Jahrgang gemischte Wurfgeräte erfasst sind
   (Schlagball 80g vs. Wurfball 200g – die DOSB-Tabellen wechseln bei Jungen
   ab 12 Jahren das Gerät, die Weiten sind dann nicht vergleichbar).
