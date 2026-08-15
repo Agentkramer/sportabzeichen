@@ -64,6 +64,13 @@ Tabelle `profiles` (Multi-User, seit Phase 2):
   aus Phase 1, das den Import blockierte, und die nie angelegte Keep-Alive-
   Tabelle aus `004`. Dateien mit dem Hinweis „NICHT AUSFÜHREN" (`001`, `004`)
   beschreiben Bestand, sind also keine Migrationen.
+- Accounts anlegen: `sql/006_accounts_anlegen_vorlage.sql`, nach der
+  Veranstaltung wieder entfernen: `sql/010_accounts_entfernen.sql`. Das
+  Löschen eines Accounts kostet **keine** Daten: `participants` verweist
+  nirgends auf `auth.users`, und `updated_by` ist bewusst Text statt
+  Fremdschlüssel. Nur die `profiles`-Zeile geht per Cascade mit (gewollt).
+  Was die Bearbeiter-Spur dagegen wirklich verwischt, ist jede spätere
+  Korrektur – der Trigger setzt `updated_by` auf den gerade Speichernden.
 
 ## Datenschutz
 
