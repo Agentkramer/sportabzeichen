@@ -390,6 +390,59 @@
       margin-top: 0.25rem;
     }
 
+    /* Rückmeldung zur Eingabe-Prüfung (siehe pruefeEingabefeld in app.js) */
+    .value-hint {
+      font-size: 0.75rem;
+      line-height: 1.5;
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+    }
+
+    .hint-fehler {
+      background: rgba(127, 29, 29, 0.35);
+      border: 1px solid #b91c1c;
+      color: #fca5a5;
+    }
+
+    .hint-warnung {
+      background: rgba(180, 83, 9, 0.25);
+      border: 1px solid #b45309;
+      color: #fcd34d;
+    }
+
+    .hint-korrektur {
+      background: rgba(30, 64, 175, 0.25);
+      border: 1px solid #3b82f6;
+      color: #93c5fd;
+    }
+
+    .value-input.eingabe-fehler {
+      border-color: #b91c1c;
+    }
+
+    .value-input.eingabe-warnung {
+      border-color: #b45309;
+    }
+
+    /* Export-Dialog */
+    .export-quickselect {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn-small {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    /* Spaltennamen sind länger als Klassennamen – deshalb keine starren
+       3 Spalten wie in der Nutzerverwaltung, sondern so viele wie passen. */
+    #exportColumns .checkbox-group {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
     .form-actions {
       display: flex;
       gap: 0.75rem;

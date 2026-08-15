@@ -230,6 +230,14 @@
       return null;
     }
 
+    // Fehleingaben würden die Rangliste kippen: "3,47" statt "3:47" wäre hier
+    // eine 800m-Zeit von 3,47 Sekunden und damit ein sicherer erster Platz.
+    // Solche Datensätze bleiben ungewertet, bis sie korrigiert sind (🔎).
+    if (typeof pruefeTeilnehmer === 'function'
+        && pruefeTeilnehmer(participant).some(f => f.status === 'fehler')) {
+      return null;
+    }
+
     const sprintSek = zuZahl(sprintRoh);
     const lauf800Sek = zuZahl(lauf800Roh);
     const wurfM = zuZahl(wurfRoh);
@@ -317,11 +325,18 @@
 
     const bewertet = [];
     let unvollstaendig = 0;
+    let fehlerhaft = 0;
 
     imJahrgang.forEach(p => {
       const e = bewerte(p);
-      if (e) bewertet.push(e);
-      else unvollstaendig++;
+      if (e) {
+        bewertet.push(e);
+      } else if (typeof pruefeTeilnehmer === 'function'
+                 && pruefeTeilnehmer(p).some(f => f.status === 'fehler')) {
+        fehlerhaft++;   // wegen Fehleingabe ausgeschlossen, nicht wegen fehlender Disziplin
+      } else {
+        unvollstaendig++;
+      }
     });
 
     const maedchen = bewertet.filter(e => e.participant.gender === 'weiblich');
@@ -356,6 +371,7 @@
       <div class="at-fuss">
         Gewertet: ${bewertet.length} von ${imJahrgang.length} Teilnehmern im Jahrgang.
         ${unvollstaendig > 0 ? `${unvollstaendig} ohne vollständigen Satz aus Sprint, 800m, Ballwurf und Weitsprung (nicht wertbar).` : ''}
+        ${fehlerhaft > 0 ? `<br>⛔ ${fehlerhaft} ${fehlerhaft === 1 ? 'Teilnehmer ist' : 'Teilnehmer sind'} wegen einer fehlerhaften Eingabe ausgeschlossen – siehe 🔎 Eingaben prüfen.` : ''}
         <br>
         Punkte = ${CONFIG.basis} − Sprint(Zehntel)×${CONFIG.sprintProZehntel}
         − 800m(Sek)×${CONFIG.lauf800ProSekunde}

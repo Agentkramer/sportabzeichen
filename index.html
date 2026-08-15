@@ -184,6 +184,29 @@
       </div>
     </div>
 
+    <!-- Export View: Spaltenauswahl -->
+    <div id="exportView" class="hidden">
+      <div class="form-header">
+        <h2>💾 CSV-Export</h2>
+        <button id="closeExportBtn" class="close-btn">✕</button>
+      </div>
+
+      <p id="exportInfo" style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;"></p>
+
+      <div class="export-quickselect">
+        <button id="exportAllBtn" class="btn btn-secondary btn-small">Alles</button>
+        <button id="exportNoneBtn" class="btn btn-secondary btn-small">Nichts</button>
+        <button id="exportDefaultBtn" class="btn btn-secondary btn-small">Standard</button>
+      </div>
+
+      <div id="exportColumns"></div>
+
+      <div class="form-actions">
+        <button id="cancelExportBtn" class="btn btn-secondary">Abbrechen</button>
+        <button id="startExportBtn" class="btn btn-success">CSV herunterladen</button>
+      </div>
+    </div>
+
     <!-- Admin View: Nutzerverwaltung -->
     <div id="adminView" class="hidden">
       <div class="form-header">
@@ -230,6 +253,8 @@
   <!-- Supabase Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
+  <!-- Prüf-Ansicht für eingetragene Leistungen (Details in pruefung.js) -->
+  <script src="pruefung.js"></script>
   <!-- Zusatzmodul Aktionstag-Wertung – zum Entfernen: diese Zeile löschen (Details in aktionstag.js) -->
   <script src="aktionstag.js"></script>
  

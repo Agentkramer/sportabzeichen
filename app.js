@@ -502,7 +502,14 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
   }
   
       if (value === null || value === undefined || value === '') return 0;
-      
+
+      // Zeitangaben MÜSSEN einen Doppelpunkt enthalten. Ohne diese Sperre
+      // machte parseFloat("3,47") daraus 3,47 SEKUNDEN - eine 800m-Zeit von
+      // knapp vier Sekunden, die klaglos als Gold durchging. Lieber 0 Punkte:
+      // dann fällt der Datensatz in der Liste und in der Prüf-Ansicht auf,
+      // statt eine falsche Medaille zu erzeugen.
+      if (exercise.unit === "min:sec" && !String(value).includes(':')) return 0;
+
       let numValue = parseFloat(String(value).replace(',', '.'));
       if (isNaN(numValue)) {
         if (String(value).includes(':')) {
@@ -536,6 +543,136 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
         if (numValue >= bronzeVal) return 1;
         return 0;
       }
+    }
+
+    // ============================================
+    // EINGABE-PRÜFUNG (Syntax + Plausibilität)
+    // ============================================
+    // Eine Quelle für drei Stellen: Live-Prüfung im Formular, die Prüf-Ansicht
+    // (pruefung.js) und die Spalte "Hinweise" im Export. Der Grund dafür ist
+    // der Aktionstag 2026: "3,47" statt "3:47" beim 800m-Lauf wurde von
+    // calculatePoints() stillschweigend als gültig behandelt.
+    //
+    // status: 'ok'      – passt zur Einheit und liegt im erwartbaren Bereich
+    //         'warnung' – formal gültig, aber weit weg von der Leistungstabelle
+    //                     (Zahlendreher? falsche Einheit?) – speicherbar
+    //         'fehler'  – falsche Syntax, die Punkte sind nicht verlässlich
+    // vorschlag: automatisch korrigierbarer Wert oder null
+    function pruefeLeistung(value, exercise) {
+      const inOrdnung = { status: 'ok', meldung: '', vorschlag: null };
+      if (!exercise) return inOrdnung;
+
+      const roh = String(value ?? '').trim();
+      if (roh === '') return inOrdnung;
+
+      // Gerätturnen kommt aus einem Dropdown, kann per Import aber trotzdem
+      // etwas anderes als 0–3 enthalten.
+      if (exercise.type === 'turnen') {
+        return /^[0-3]$/.test(roh)
+          ? inOrdnung
+          : { status: 'fehler', meldung: 'Beim Gerätturnen ist nur eine Bewertung von 0 bis 3 möglich.', vorschlag: null };
+      }
+
+      return exercise.unit === 'min:sec'
+        ? pruefeZeitangabe(roh)
+        : pruefeZahlangabe(roh, exercise);
+    }
+
+    // Erwartet MM:SS. Sekunden ab 60 gibt es nicht – das ist immer ein Tippfehler.
+    function pruefeZeitangabe(roh) {
+      const mitDoppelpunkt = roh.match(/^(\d{1,3}):(\d{1,2})$/);
+      if (mitDoppelpunkt) {
+        const [, min, sek] = mitDoppelpunkt;
+        if (sek.length === 1) {
+          return {
+            status: 'fehler',
+            meldung: 'Sekunden bitte zweistellig eintragen.',
+            vorschlag: `${min}:0${sek}`
+          };
+        }
+        if (parseInt(sek, 10) > 59) {
+          return {
+            status: 'fehler',
+            meldung: `${sek} Sekunden gibt es nicht – bitte als MM:SS eintragen (z. B. 3:47).`,
+            vorschlag: null
+          };
+        }
+        return { status: 'ok', meldung: '', vorschlag: null };
+      }
+
+      // Der Klassiker vom Aktionstag: "3,47" oder "3.47" statt "3:47"
+      const mitKomma = roh.match(/^(\d{1,3})[.,](\d{2})$/);
+      if (mitKomma && parseInt(mitKomma[2], 10) <= 59) {
+        return {
+          status: 'fehler',
+          meldung: 'Zeiten werden mit Doppelpunkt eingetragen (MM:SS), nicht mit Komma.',
+          vorschlag: `${mitKomma[1]}:${mitKomma[2]}`
+        };
+      }
+
+      // Doppelpunkt vergessen: "347" ist bei einer Laufzeit eindeutig 3:47
+      const nurZiffern = roh.match(/^(\d{1,2})(\d{2})$/);
+      if (nurZiffern && parseInt(nurZiffern[2], 10) <= 59) {
+        return {
+          status: 'fehler',
+          meldung: 'Der Doppelpunkt fehlt – Zeiten werden als MM:SS eingetragen.',
+          vorschlag: `${nurZiffern[1]}:${nurZiffern[2]}`
+        };
+      }
+
+      // Alles andere ist zu mehrdeutig, um es automatisch zu raten
+      // ("3,4" könnte 3:04 oder 3:40 sein) – das muss der Mensch entscheiden.
+      return {
+        status: 'fehler',
+        meldung: `"${roh}" ist keine gültige Zeit. Bitte im Format MM:SS eintragen (z. B. 3:47).`,
+        vorschlag: null
+      };
+    }
+
+    function pruefeZahlangabe(roh, exercise) {
+      if (roh.includes(':')) {
+        return {
+          status: 'fehler',
+          meldung: `Hier wird kein Doppelpunkt erwartet, sondern eine Zahl in ${exercise.unit}.`,
+          vorschlag: roh.replace(':', ',')
+        };
+      }
+      if (!/^\d{1,4}([.,]\d{1,3})?$/.test(roh)) {
+        return {
+          status: 'fehler',
+          meldung: `"${roh}" ist keine Zahl. Erwartet wird ein Wert in ${exercise.unit}.`,
+          vorschlag: null
+        };
+      }
+
+      const zahl = parseFloat(roh.replace(',', '.'));
+      const bereich = plausiblerBereich(exercise);
+      if (bereich && (zahl < bereich.min || zahl > bereich.max)) {
+        return {
+          status: 'warnung',
+          meldung: `${roh} ${exercise.unit} liegt weit außerhalb des erwartbaren Bereichs `
+                 + `(etwa ${formatiereZahl(bereich.min)}–${formatiereZahl(bereich.max)} ${exercise.unit}). `
+                 + 'Zahlendreher oder falsche Einheit?',
+          vorschlag: null
+        };
+      }
+      return { status: 'ok', meldung: '', vorschlag: null };
+    }
+
+    // Bronze bis Gold deckt nur den mittleren Bereich ab – echte Leistungen
+    // liegen darunter und darüber. Erst ein Vielfaches davon ist ein Hinweis
+    // auf einen Eingabefehler (z. B. 345 statt 3,45 Meter beim Weitsprung).
+    // Bewusst großzügig: eine Warnung, die zu oft kommt, wird ignoriert.
+    function plausiblerBereich(exercise) {
+      const werte = [exercise.bronze, exercise.silber, exercise.gold]
+        .map(v => (typeof v === 'string' ? timeToSeconds(v) : v))
+        .filter(v => typeof v === 'number' && !isNaN(v));
+      if (werte.length === 0) return null;
+      return { min: Math.min(...werte) / 4, max: Math.max(...werte) * 3 };
+    }
+
+    function formatiereZahl(n) {
+      return (Math.round(n * 100) / 100).toString().replace('.', ',');
     }
 
     function calculateOverallResult(points) {
@@ -573,6 +710,47 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
   
   return points;
 }
+
+    // Übungsdefinition eines gespeicherten Ergebnisses (Alter + Geschlecht des
+    // Teilnehmers bestimmen, welche Leistungstabelle gilt). Wird vom Export
+    // und von der Prüf-Ansicht gebraucht.
+    function uebungVon(participant, catKey) {
+      const eintrag = participant.results?.[catKey];
+      if (!eintrag?.exercise) return null;
+      const ageGroup = getAgeGroup(calculateAgeForYear(participant.birth_year));
+      return PERFORMANCE_DATA[participant.gender]?.[ageGroup]?.[catKey]?.[eintrag.exercise] || null;
+    }
+
+    // Alle Auffälligkeiten eines Teilnehmers – eine Liste von
+    // { catKey, exerciseKey, value, status, meldung, vorschlag }.
+    function pruefeTeilnehmer(participant) {
+      const funde = [];
+      Object.keys(CATEGORIES).forEach(catKey => {
+        const eintrag = participant.results?.[catKey];
+        if (!eintrag?.exercise || eintrag.value === undefined || eintrag.value === '') return;
+
+        const exercise = uebungVon(participant, catKey);
+        if (!exercise) {
+          // Übung existiert in der Tabelle dieser Altersgruppe nicht (mehr) –
+          // typisch nach einem Geburtsjahr-Wechsel, gibt immer 0 Punkte.
+          funde.push({
+            catKey,
+            exerciseKey: eintrag.exercise,
+            value: eintrag.value,
+            status: 'fehler',
+            meldung: `Übung "${EXERCISE_LABELS[eintrag.exercise] || eintrag.exercise}" gibt es in der Leistungstabelle dieser Altersgruppe nicht – die Leistung zählt nicht.`,
+            vorschlag: null
+          });
+          return;
+        }
+
+        const ergebnis = pruefeLeistung(eintrag.value, exercise);
+        if (ergebnis.status !== 'ok') {
+          funde.push({ catKey, exerciseKey: eintrag.exercise, value: eintrag.value, ...ergebnis });
+        }
+      });
+      return funde;
+    }
 
     function showLoading() {
       document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -839,6 +1017,15 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     const fileInput = document.getElementById('fileInput');
     const importPreview = document.getElementById('importPreview');
     const previewContent = document.getElementById('previewContent');
+
+    // Export-Elemente
+    const exportView = document.getElementById('exportView');
+    const closeExportBtn = document.getElementById('closeExportBtn');
+    const cancelExportBtn = document.getElementById('cancelExportBtn');
+    const startExportBtn = document.getElementById('startExportBtn');
+    const exportAllBtn = document.getElementById('exportAllBtn');
+    const exportNoneBtn = document.getElementById('exportNoneBtn');
+    const exportDefaultBtn = document.getElementById('exportDefaultBtn');
 
     // Admin-Elemente
     const adminBtn = document.getElementById('adminBtn');
@@ -1208,6 +1395,9 @@ function renderDisciplineForms() {
               if (valueInput && result.value) {
                 valueInput.value = result.value;
                 updatePointsDisplay(cat);
+                // Bereits gespeicherte Fehleingaben sollen sofort auffallen,
+                // nicht erst wenn jemand das Feld anfasst.
+                pruefeEingabefeld(cat, false);
               }
             }, 10);
           }
@@ -1264,6 +1454,7 @@ detailsDiv.innerHTML = `
     <input type="text" class="value-input" placeholder="${placeholder}" inputmode="${exercise.unit === 'min:sec' ? 'text' : 'decimal'}">
     <div class="result-points result-points-0" id="points-${catKey}">0 Pkt</div>
   </div>
+  <div class="value-hint hidden" id="hint-${catKey}"></div>
   <div class="thresholds">
     <span>🥉 ${exercise.bronze}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
     <span>🥈 ${exercise.silber}${exercise.unit === 'min:sec' ? '' : ' ' + exercise.unit}</span>
@@ -1273,7 +1464,71 @@ detailsDiv.innerHTML = `
 `;
       // Event-Listener für Wert-Eingabe
       const valueInput = section.querySelector('.value-input');
-      valueInput.addEventListener('input', () => updatePointsDisplay(catKey));
+      valueInput.addEventListener('input', () => {
+        updatePointsDisplay(catKey);
+        pruefeEingabefeld(catKey, false);   // während des Tippens nur anzeigen
+      });
+      // Erst beim Verlassen des Feldes wird korrigiert – sonst würde die
+      // Korrektur schon nach dem zweiten Zeichen zuschlagen.
+      valueInput.addEventListener('blur', () => pruefeEingabefeld(catKey, true));
+    }
+
+    // Sucht die Übungsdefinition zu einer Formular-Sektion (Alter + Geschlecht
+    // aus den Stammdaten, Übung aus dem Dropdown).
+    function uebungImFormular(catKey) {
+      const birthYear = parseInt(birthYearInput.value);
+      if (!birthYear) return null;
+
+      const ageGroup = getAgeGroup(calculateAgeForYear(birthYear));
+      const data = PERFORMANCE_DATA[genderInput.value]?.[ageGroup]?.[catKey];
+
+      const section = document.querySelector(`[data-category="${catKey}"]`);
+      const select = section?.querySelector('.exercise-select');
+      const valueInput = section?.querySelector('.value-input');
+      if (!select || !valueInput) return null;
+
+      const exercise = data?.[select.value];
+      return exercise ? { exercise, exerciseKey: select.value, valueInput } : null;
+    }
+
+    // Prüft ein einzelnes Eingabefeld und zeigt das Ergebnis darunter an.
+    // korrigieren=true übernimmt einen eindeutigen Korrekturvorschlag direkt –
+    // sichtbar, damit niemandem eine stille Umdeutung untergeschoben wird.
+    // Rückgabe: der Status ('ok' | 'warnung' | 'fehler') für handleSave().
+    function pruefeEingabefeld(catKey, korrigieren) {
+      const hintDiv = document.getElementById(`hint-${catKey}`);
+      const ctx = uebungImFormular(catKey);
+      if (!ctx || !hintDiv) return 'ok';
+
+      const { exercise, valueInput } = ctx;
+      let ergebnis = pruefeLeistung(valueInput.value, exercise);
+      let korrigiertVon = null;
+
+      if (korrigieren && ergebnis.vorschlag) {
+        korrigiertVon = valueInput.value.trim();
+        valueInput.value = ergebnis.vorschlag;
+        ergebnis = pruefeLeistung(valueInput.value, exercise);
+        updatePointsDisplay(catKey);
+      }
+
+      valueInput.classList.remove('eingabe-fehler', 'eingabe-warnung');
+
+      if (korrigiertVon) {
+        hintDiv.className = 'value-hint hint-korrektur';
+        hintDiv.textContent = `✏️ „${korrigiertVon}“ wurde als ${valueInput.value} übernommen – bitte kurz prüfen.`;
+        return ergebnis.status;
+      }
+
+      if (ergebnis.status === 'ok') {
+        hintDiv.className = 'value-hint hidden';
+        hintDiv.textContent = '';
+        return 'ok';
+      }
+
+      valueInput.classList.add(ergebnis.status === 'fehler' ? 'eingabe-fehler' : 'eingabe-warnung');
+      hintDiv.className = `value-hint hint-${ergebnis.status}`;
+      hintDiv.textContent = `${ergebnis.status === 'fehler' ? '⛔' : '⚠️'} ${ergebnis.meldung}`;
+      return ergebnis.status;
     }
 
     function updatePointsDisplay(catKey) {
@@ -1405,6 +1660,7 @@ detailsDiv.innerHTML = `
                 if (valueInput && result.value) {
                   valueInput.value = result.value;
                   updatePointsDisplay(cat);
+                  pruefeEingabefeld(cat, false);
                 }
               }, 10);
             }
@@ -1414,13 +1670,40 @@ detailsDiv.innerHTML = `
     }
 
     async function handleSave() {
+      // Reihenfolge ist wichtig: erst prüfen (dabei werden eindeutige
+      // Tippfehler wie "3,47" -> "3:47" im Feld korrigiert), dann einsammeln.
+      const probleme = { fehler: [], warnung: [] };
+      Object.entries(CATEGORIES).forEach(([catKey, cat]) => {
+        const status = pruefeEingabefeld(catKey, true);
+        if (status === 'ok') return;
+        const ctx = uebungImFormular(catKey);
+        if (!ctx) return;
+        const { meldung } = pruefeLeistung(ctx.valueInput.value, ctx.exercise);
+        probleme[status].push(`${cat.icon} ${cat.label}: ${meldung}`);
+      });
+
+      if (probleme.fehler.length > 0) {
+        alert('Bitte zuerst korrigieren:\n\n' + probleme.fehler.join('\n\n'));
+        return;
+      }
+
       const data = collectFormData();
-      
+
       if (!data.first_name || !data.last_name) {
         alert('Bitte Vor- und Nachname eingeben');
         return;
     }
-      
+
+      // Unplausible Werte blockieren nicht – Ausnahmeleistungen gibt es.
+      // Aber sie sollen bewusst bestätigt werden.
+      if (probleme.warnung.length > 0) {
+        const weiter = confirm(
+          'Diese Werte wirken unplausibel:\n\n' + probleme.warnung.join('\n\n') +
+          '\n\nTrotzdem so speichern?'
+        );
+        if (!weiter) return;
+      }
+
       await saveParticipantToDb(data);
       hideForm();
     }
@@ -1652,41 +1935,153 @@ function parseCSV(content) {
     // ============================================
     // CSV EXPORT
     // ============================================
+    // Jede Spalte, die exportiert werden kann - inklusive der Rohwerte, mit
+    // denen sich Eingabefehler überhaupt erst nachvollziehen lassen. Was
+    // angehakt ist, entscheidet der Dialog (Auswahl wird im Browser gemerkt).
+    //
+    // wert(p, ctx) liefert den Zellinhalt; ctx enthält die einmal pro
+    // Teilnehmer berechneten Werte (Punkte, Gesamtergebnis, Auffälligkeiten).
+    const EXPORT_SPALTEN = [
+      { key: 'external_id', gruppe: '👤 Stammdaten', label: 'External_ID',  standard: true,  wert: p => p.external_id || '' },
+      { key: 'first_name',  gruppe: '👤 Stammdaten', label: 'Vorname',      standard: true,  wert: p => p.first_name || '' },
+      { key: 'last_name',   gruppe: '👤 Stammdaten', label: 'Nachname',     standard: true,  wert: p => p.last_name || '' },
+      { key: 'birth_year',  gruppe: '👤 Stammdaten', label: 'Geburtsjahr',  standard: true,  wert: p => p.birth_year },
+      { key: 'alter',       gruppe: '👤 Stammdaten', label: 'Alter',        standard: false, wert: (p, ctx) => ctx.age },
+      { key: 'class_name',  gruppe: '👤 Stammdaten', label: 'Klasse',       standard: true,  wert: p => p.class_name || '' },
+      { key: 'gender',      gruppe: '👤 Stammdaten', label: 'Geschlecht',   standard: true,  wert: p => p.gender },
+      { key: 'id',          gruppe: '👤 Stammdaten', label: 'Datenbank-ID', standard: false, wert: p => p.id },
+
+      // Pro Disziplingruppe: gewählte Übung, eingetragene Rohleistung, Punkte
+      ...Object.entries(CATEGORIES).flatMap(([catKey, cat]) => [
+        {
+          key: `${catKey}_uebung`, gruppe: `${cat.icon} ${cat.label}`, label: `${cat.label} Übung`, standard: true,
+          wert: p => {
+            const ex = p.results?.[catKey]?.exercise;
+            return ex ? (EXERCISE_LABELS[ex] || ex) : '';
+          }
+        },
+        {
+          key: `${catKey}_wert`, gruppe: `${cat.icon} ${cat.label}`, label: `${cat.label} Leistung`, standard: true,
+          wert: p => p.results?.[catKey]?.value ?? ''
+        },
+        {
+          key: `${catKey}_punkte`, gruppe: `${cat.icon} ${cat.label}`, label: `${cat.label} Punkte`, standard: true,
+          wert: (p, ctx) => ctx.points[catKey] || 0
+        }
+      ]),
+
+      { key: 'total', gruppe: '🏅 Auswertung', label: 'Gesamt',   standard: true, wert: (p, ctx) => ctx.result.total },
+      { key: 'medal', gruppe: '🏅 Auswertung', label: 'Ergebnis', standard: true,
+        wert: (p, ctx) => ctx.result.medal
+          ? ctx.result.medal.charAt(0).toUpperCase() + ctx.result.medal.slice(1)
+          : 'Nicht bestanden' },
+      { key: 'offen', gruppe: '🏅 Auswertung', label: 'Offene Disziplinen', standard: true,
+        wert: (p, ctx) => Object.entries(CATEGORIES)
+          .filter(([key]) => !ctx.points[key] || ctx.points[key] === 0)
+          .map(([, cat]) => cat.label)
+          .join(', ') },
+      { key: 'hinweise', gruppe: '🏅 Auswertung', label: 'Auffälligkeiten', standard: false,
+        wert: (p, ctx) => ctx.funde
+          .map(f => `${CATEGORIES[f.catKey].label}: "${f.value}" – ${f.meldung}`)
+          .join(' | ') },
+
+      { key: 'updated_by', gruppe: '✏️ Bearbeitung', label: 'Zuletzt von', standard: false, wert: p => p.updated_by || '' },
+      { key: 'updated_at', gruppe: '✏️ Bearbeitung', label: 'Zuletzt am',  standard: false,
+        wert: p => p.updated_at ? new Date(p.updated_at).toLocaleString('de-DE') : '' },
+      { key: 'created_at', gruppe: '✏️ Bearbeitung', label: 'Angelegt am', standard: false,
+        wert: p => p.created_at ? new Date(p.created_at).toLocaleString('de-DE') : '' }
+    ];
+
+    const EXPORT_SPEICHER_KEY = 'dsa_export_spalten';
+
+    function gemerkteExportSpalten() {
+      try {
+        const gespeichert = JSON.parse(localStorage.getItem(EXPORT_SPEICHER_KEY));
+        if (Array.isArray(gespeichert) && gespeichert.length > 0) return gespeichert;
+      } catch (e) {
+        // Ein kaputter Eintrag im localStorage darf den Export nicht blockieren
+      }
+      return EXPORT_SPALTEN.filter(s => s.standard).map(s => s.key);
+    }
+
+    function renderExportSpalten(ausgewaehlt) {
+      const container = document.getElementById('exportColumns');
+      const gruppen = [...new Set(EXPORT_SPALTEN.map(s => s.gruppe))];
+
+      container.innerHTML = gruppen.map(gruppe => `
+        <div class="form-section">
+          <h3>${gruppe}</h3>
+          <div class="checkbox-group">
+            ${EXPORT_SPALTEN.filter(s => s.gruppe === gruppe).map(s => `
+              <label class="checkbox-item">
+                <input type="checkbox" value="${s.key}" ${ausgewaehlt.includes(s.key) ? 'checked' : ''}>
+                <span>${s.label}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function gewaehlteExportSpalten() {
+      return [...document.querySelectorAll('#exportColumns input:checked')].map(cb => cb.value);
+    }
+
+    function showExport() {
+      listView.classList.add('hidden');
+      exportView.classList.remove('hidden');
+      headerActions.classList.add('hidden');
+
+      renderExportSpalten(gemerkteExportSpalten());
+
+      // Der Export bezieht sich immer auf die aktuell gefilterte Liste -
+      // das sichtbar zu machen erspart falsche Annahmen über den Inhalt.
+      const anzahl = getFilteredParticipants().length;
+      document.getElementById('exportInfo').textContent =
+        `Exportiert werden ${anzahl} Teilnehmer (die aktuell gefilterte Liste). `
+        + 'Die Spaltenauswahl wird für den nächsten Export gemerkt.';
+    }
+
+    function hideExport() {
+      exportView.classList.add('hidden');
+      listView.classList.remove('hidden');
+      headerActions.classList.remove('hidden');
+    }
+
+    // Semikolon, Anführungszeichen und Zeilenumbrüche würden die Spalten sonst
+    // zerreißen - vor allem in der Spalte "Auffälligkeiten".
+    function csvFeld(wert) {
+      const text = String(wert ?? '');
+      return /[";\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
     function exportCSV() {
-      const headers = ['External_ID', 'Vorname', 'Nachname', 'Geburtsjahr', 'Klasse', 'Geschlecht', 'Ausdauer', 'Kraft', 'Schnelligkeit', 'Koordination', 'Gesamt', 'Ergebnis', 'Offene Disziplinen', 'Zuletzt von', 'Zuletzt am'];
+      const keys = gewaehlteExportSpalten();
+      if (keys.length === 0) {
+        alert('Bitte mindestens eine Spalte auswählen.');
+        return;
+      }
+      localStorage.setItem(EXPORT_SPEICHER_KEY, JSON.stringify(keys));
+
+      // Reihenfolge der Spalten bleibt die aus EXPORT_SPALTEN, nicht die
+      // Anklick-Reihenfolge - sonst sieht jeder Export anders aus.
+      const spalten = EXPORT_SPALTEN.filter(s => keys.includes(s.key));
 
       // Exportiert die aktuell gefilterte Liste (z.B. "Unvollständig"), nicht
       // zwangsläufig alle Teilnehmer - so wird der Export zur "Übersicht
       // offener Leistungen", wenn man vorher entsprechend filtert.
       const rows = getFilteredParticipants().map(p => {
-        const age = calculateAgeForYear(p.birth_year);
         const points = getParticipantPoints(p);
-        const result = calculateOverallResult(points);
-        const openDisciplines = Object.entries(CATEGORIES)
-          .filter(([key]) => !points[key] || points[key] === 0)
-          .map(([, cat]) => cat.label)
-          .join(', ');
-
-        return [
-  p.external_id || '',
-  p.first_name,
-  p.last_name,
-  p.birth_year,
-  p.class_name || '',
-  p.gender,
-  points.ausdauer || 0,
-  points.kraft || 0,
-  points.schnelligkeit || 0,
-  points.koordination || 0,
-  result.total,
-  result.medal ? result.medal.charAt(0).toUpperCase() + result.medal.slice(1) : 'Nicht bestanden',
-  openDisciplines,
-  p.updated_by || '',
-  p.updated_at ? new Date(p.updated_at).toLocaleString('de-DE') : ''
-].join(';');
+        const ctx = {
+          age: calculateAgeForYear(p.birth_year),
+          points,
+          result: calculateOverallResult(points),
+          funde: pruefeTeilnehmer(p)
+        };
+        return spalten.map(s => csvFeld(s.wert(p, ctx))).join(';');
       });
-      
-      const csv = [headers.join(';'), ...rows].join('\n');
+
+      const csv = [spalten.map(s => csvFeld(s.label)).join(';'), ...rows].join('\n');
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1696,6 +2091,7 @@ function parseCSV(content) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      hideExport();
     }
 
 // ============================================
@@ -1709,8 +2105,17 @@ addBtn.addEventListener('click', () => {
 closeFormBtn.addEventListener('click', hideForm);
 cancelBtn.addEventListener('click', hideForm);
 saveBtn.addEventListener('click', handleSave);
-exportBtn.addEventListener('click', exportCSV);
+exportBtn.addEventListener('click', showExport);
 importBtn.addEventListener('click', showImport);
+
+// Export-Dialog
+closeExportBtn.addEventListener('click', hideExport);
+cancelExportBtn.addEventListener('click', hideExport);
+startExportBtn.addEventListener('click', exportCSV);
+exportAllBtn.addEventListener('click', () => renderExportSpalten(EXPORT_SPALTEN.map(s => s.key)));
+exportNoneBtn.addEventListener('click', () => renderExportSpalten([]));
+exportDefaultBtn.addEventListener('click', () =>
+  renderExportSpalten(EXPORT_SPALTEN.filter(s => s.standard).map(s => s.key)));
 
 closeImportBtn.addEventListener('click', hideImport);
 cancelImportBtn.addEventListener('click', hideImport);

@@ -12,7 +12,7 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
 - Vanilla HTML/CSS/JavaScript (kein Framework, bewusste Entscheidung)
 - Supabase (PostgreSQL) als Backend, Zugriff über Supabase-Client/REST-API
 - Hosting: GitHub Pages (nur statische Dateien, kein eigenes Backend)
-- PWA mit Service Worker (aktuell v41 – Version bei jedem Deployment hochzählen,
+- PWA mit Service Worker (aktuell v44 – Version bei jedem Deployment hochzählen,
   sonst greift der Cache nicht neu; hält sich hartnäckig, im Zweifel Hard-Reload
   oder Service Worker in den DevTools abmelden)
 - Keep-Alive gegen die Supabase-Pausierung (Free Tier pausiert nach 7 Tagen
@@ -37,6 +37,8 @@ Tabelle `participants`:
 - `results` (JSONB): `{ ausdauer: {exercise: "lauf_800", value: "3:45"}, kraft: {...}, ... }`
 - **Wichtig:** Fehlende Disziplinen sind `undefined`, nicht `0` – das ist
   Absicht und wird in der Punktelogik so ausgewertet.
+- Der Rohwert wird als **Text** gespeichert, so wie eingetippt (`"3:45"`,
+  `"3,45"`). Das ist der Grund für die Eingabeprüfung (siehe unten).
 - Turnen-Sonderfall: subjektive Bewertung 0–3 statt Leistungstabelle,
   z.B. `{ type: "turnen", geraet: "Barren" }`
 - Punkteberechnung nach offiziellen DOSB-Leistungstabellen (alters- und
@@ -89,8 +91,52 @@ Bewusst zurückgestellt: vollständige In-App-Account-Erstellung (E-Mail+
 Passwort) würde eine Supabase Edge Function + Service-Role-Key erfordern –
 Accounts werden weiterhin manuell im Supabase-Dashboard angelegt.
 
+**Nach dem ersten Aktionstag (14.08.2026):** Datenqualität. Beim Übertragen der
+handschriftlichen Listen entstanden Fehleingaben, vor allem `3,47` statt `3:47`
+beim 800m-Lauf. `calculatePoints` hat solche Werte als Sekunden gelesen – aus
+einer 3:47er-Zeit wurden 3,47 Sekunden und damit klaglos Gold. Drei Baustellen,
+eine gemeinsame Regel:
+
+1. **`pruefeLeistung(value, exercise)` in `app.js`** ist die einzige Quelle für
+   „ist diese Eingabe plausibel?" und liefert `ok` / `warnung` / `fehler` plus
+   optional einen Korrekturvorschlag. `min:sec` verlangt zwingend einen
+   Doppelpunkt (Sekunden ≥ 60 sind ein Tippfehler); Zahlwerte werden gegen einen
+   großzügigen Bereich aus den Tabellenwerten geprüft (Bronze/4 bis Gold×3),
+   damit `345` statt `3,45` Meter auffällt. Bewusst großzügig – eine Warnung,
+   die zu oft kommt, wird ignoriert.
+2. **Live im Formular:** Fehler blockieren das Speichern, Warnungen brauchen
+   eine Bestätigung, eindeutige Tippfehler werden beim Verlassen des Feldes
+   sichtbar korrigiert (`3,47` → `3:47`, `347` → `3:47`).
+3. **`calculatePoints` gibt bei einer `min:sec`-Angabe ohne Doppelpunkt 0
+   Punkte** statt einer erfundenen Medaille. Alt-Datensätze fallen dadurch auf
+   0 – gewollt, sie tauchen dann in der Prüf-Ansicht auf.
+
 **Phase 3 (optional, noch kein festgelegter Zeitpunkt):** Multi-Tenancy für
 mehrere Schulen.
+
+## Prüf-Ansicht (`pruefung.js`)
+
+🔎-Button im Header: listet alle Einträge, deren Rohwert nicht zur Übung passt
+oder unplausibel ist – nach Klasse und Teilnehmer sortiert, mit Eingabefeld und
+Punkte-Vorschau direkt in der Zeile. Drei Prüfstufen (nur Fehler / plus
+unplausible Werte / plus alles mit 0 Punkten). „Alle Vorschläge übernehmen"
+schreibt die eindeutigen Korrekturen nach Rückfrage in einem Rutsch (ein Update
+pro Teilnehmer, danach einmal neu laden).
+
+Die Prüflogik selbst steht in `app.js`, nicht hier – dieselbe Regel prüft im
+Formular, in dieser Ansicht und in der Export-Spalte „Auffälligkeiten".
+Entfernen wie beim Aktionstag-Modul: Script-Zeile in `index.html`, Datei,
+`urlsToCache` in `sw.js`.
+
+## CSV-Export
+
+Der 💾-Button öffnet seit dem Aktionstag erst eine Spaltenauswahl
+(`EXPORT_SPALTEN` in `app.js`, Auswahl wird im `localStorage` gemerkt).
+Exportierbar ist alles, was in der DB steht – **inklusive der gewählten Übung
+und der eingetippten Rohleistung pro Disziplingruppe**, denn ohne die lässt
+sich eine Fehleingabe von außen nicht finden. Optional die Spalte
+„Auffälligkeiten" (Klartext aus `pruefeTeilnehmer`). Der Export folgt weiterhin
+dem aktiven Filter der Liste.
 
 ## Zusatzmodul: Aktionstag-Wertung (`aktionstag.js`)
 
