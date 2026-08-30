@@ -485,8 +485,17 @@ function populateBirthYearDropdown() {
   }
 }
 
+// Baut die Klassen-Auswahl im Formular neu auf.
+// WICHTIG: Diese Funktion läuft auch dann, wenn das Formular gerade offen ist –
+// Supabase meldet bei jedem Token-Refresh und bei jeder Rückkehr aus dem
+// Hintergrund ein Auth-Event, und das ruft applyRoleBasedUI() auf. Ein <select>
+// verliert beim Überschreiben des innerHTML seine Auswahl und fällt auf die
+// erste Option zurück: beim Admin auf "Keine Klasse", beim Examiner auf dessen
+// erste Klasse. Beim nächsten Speichern wurde daraus eine fehlende bzw. eine
+// falsche Klassenzuordnung. Deshalb wird die Auswahl gemerkt und wiederhergestellt.
 function populateClassNameDropdown() {
   const classNameInput = document.getElementById('classNameInput');
+  const vorherigeAuswahl = classNameInput.value;
 
   if (currentUserRole === 'examiner') {
     // Examiner sehen/wählen nur ihre zugewiesenen Klassen (RLS erlaubt eh nichts anderes)
@@ -497,6 +506,7 @@ function populateClassNameDropdown() {
         .map(c => `<option value="${c}">${c}</option>`)
         .join('');
     }
+    setzeKlassenauswahl(vorherigeAuswahl);
     return;
   }
 
@@ -508,6 +518,39 @@ function populateClassNameDropdown() {
     option.textContent = className;
     classNameInput.appendChild(option);
   });
+
+  setzeKlassenauswahl(vorherigeAuswahl);
+}
+
+// Einzige Stelle, an der die Klassenauswahl gesetzt wird – und die einzige,
+// die dafür sorgt, dass der gewünschte Wert überhaupt auswählbar ist.
+// Steht bei einem Teilnehmer eine Klasse, die nicht in AVAILABLE_CLASSES
+// vorkommt (Tippfehler beim Import, "5A" statt "5a", eine neue Bezeichnung),
+// dann verwirft ein <select> sie kommentarlos – und beim Speichern wäre die
+// Zuordnung weg. Statt dessen wird sie sichtbar markiert nachgetragen.
+function setzeKlassenauswahl(klasse) {
+  const select = document.getElementById('classNameInput');
+
+  // Nachtrag des vorherigen Teilnehmers wieder entfernen, sonst sammeln sich
+  // fremde Klassen in der Liste an.
+  select.querySelectorAll('option[data-nachgetragen]').forEach(o => o.remove());
+
+  const bekannt = [...select.options].some(o => o.value === klasse);
+
+  if (klasse && !bekannt) {
+    const option = document.createElement('option');
+    option.value = klasse;
+    option.textContent = `${klasse} (nicht in der Klassenliste)`;
+    option.dataset.nachgetragen = '1';
+    select.appendChild(option);
+  }
+
+  select.value = klasse || '';
+
+  // Kein passender Eintrag vorhanden (z.B. Examiner: dort gibt es keine
+  // Leer-Option). Ohne das stünde das Feld auf einer unsichtbaren Auswahl,
+  // die beim Speichern zu null würde.
+  if (select.selectedIndex === -1) select.selectedIndex = 0;
 }
  
 function populateClassFilter() {
@@ -1024,6 +1067,10 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
     // ============================================
     let participants = [];
     let editingId = null;
+    // Der unveränderte Datensatz, wie er ins Formular geladen wurde. Gebraucht
+    // für Felder, die das Formular gar nicht anzeigt (external_id) – die dürfen
+    // beim Speichern nicht verloren gehen.
+    let editingOriginal = null;
     let currentClassFilter = '';
     let currentPerformanceFilter = '';
     let importData = [];
@@ -1673,9 +1720,10 @@ detailsDiv.innerHTML = `
       firstNameInput.value = '';
       lastNameInput.value = '';
       birthYearInput.value = '';
-      document.getElementById('classNameInput').value = '';
+      setzeKlassenauswahl('');
       genderInput.value = 'weiblich';
       editingId = null;
+      editingOriginal = null;
       disciplinesForms.innerHTML = '';
       document.getElementById('lastEditInfo').classList.add('hidden');
     }
@@ -1722,6 +1770,10 @@ detailsDiv.innerHTML = `
             birth_year: parseInt(birthYearInput.value),
             class_name: document.getElementById('classNameInput').value || null,
             gender: genderInput.value,
+            // Das Formular zeigt die external_id nicht an, saveParticipantToDb
+            // schreibt sie aber mit. Ohne diese Zeile wurde die ID aus dem
+            // Import bei jedem Speichern auf null gesetzt.
+            external_id: editingOriginal?.external_id ?? null,
             results
         };
     }
@@ -1730,9 +1782,10 @@ detailsDiv.innerHTML = `
       firstNameInput.value = participant.first_name || '';
       lastNameInput.value = participant.last_name || '';
       birthYearInput.value = participant.birth_year || '';
-      document.getElementById('classNameInput').value = participant.class_name || '';
+      setzeKlassenauswahl(participant.class_name || '');
       genderInput.value = participant.gender;
       editingId = participant.id;
+      editingOriginal = participant;
       zeigeLetzteAenderung(participant);
 
       renderDisciplineForms();
