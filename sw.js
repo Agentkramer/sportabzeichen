@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sportabzeichen-v47';
+const CACHE_NAME = 'sportabzeichen-v48';
 const urlsToCache = [
   '/sportabzeichen/',
   '/sportabzeichen/index.html',

@@ -2313,6 +2313,90 @@ cancelProfileEditBtn.addEventListener('click', () => {
 });
 saveProfileBtn.addEventListener('click', saveProfile);
 
+// ============================================
+// HEADER-MENÜ (⋯)
+// ============================================
+// Neben dem Logo ist auf einem 375px breiten Display nur Platz für drei
+// Buttons. Sichtbar bleibt deshalb nur, was im Unterricht gebraucht wird;
+// alles andere wandert ins Menü. Die Zuordnung passiert über die ID, damit
+// die entfernbaren Zusatzmodule unberührt bleiben: Fehlt eine ID, weil das
+// Modul gelöscht wurde, passiert einfach nichts – und ein künftiges Modul
+// landet ohne Zutun im Menü, was die richtige Voreinstellung ist.
+const HEADER_PRIMAER = ['pruefungBtn', 'logoutBtn'];
+
+function ordneHeaderEin() {
+  const actions = document.getElementById('headerActions');
+  const menu = document.getElementById('headerMenu');
+  const liste = document.getElementById('headerMenuList');
+  if (!actions || !menu || !liste) return;
+
+  [...actions.children].forEach(el => {
+    if (el === menu || el.tagName !== 'BUTTON') return;
+    if (HEADER_PRIMAER.includes(el.id)) return;
+
+    // Aus dem quadratischen Icon-Button wird eine Menüzeile mit Beschriftung.
+    // Der Text steht schon im title-Attribut – so müssen die Module nichts
+    // über das Menü wissen.
+    const icon = document.createElement('span');
+    icon.className = 'header-menu-icon';
+    icon.textContent = el.textContent.trim();
+
+    const label = document.createElement('span');
+    // Klammerzusätze wie "(berücksichtigt aktive Filter)" sind als Tooltip
+    // sinnvoll, im Menü würden sie nur umbrechen. Am title-Attribut bleiben sie.
+    label.textContent = (el.title || el.id).replace(/\s*\([^)]*\)\s*$/, '');
+
+    el.textContent = '';
+    el.append(icon, label);
+    el.classList.remove('btn-icon');
+    el.classList.add('header-menu-item');
+    liste.appendChild(el);
+  });
+
+  // Primäre Buttons in die konfigurierte Reihenfolge bringen, danach das ⋯.
+  HEADER_PRIMAER.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) actions.insertBefore(btn, menu);
+  });
+
+  // Ein leeres Menü braucht keinen Knopf (z.B. wenn beide Module entfernt sind).
+  menu.classList.toggle('hidden', liste.children.length === 0);
+}
+
+function headerMenuOeffnen(offen) {
+  const list = document.getElementById('headerMenuList');
+  const btn = document.getElementById('headerMenuBtn');
+  if (!list || !btn) return;
+  list.classList.toggle('hidden', !offen);
+  btn.setAttribute('aria-expanded', String(offen));
+}
+
+// Defensiv: Der Service Worker hält sich hartnäckig. Liefert er bei jemandem
+// noch die alte index.html aus, während app.js schon neu ist, gäbe es die
+// Menü-Elemente nicht – ein harter Fehler an dieser Stelle würde die ganze App
+// lahmlegen. Ohne Menü bleibt es dann eben bei der alten Button-Leiste.
+const headerMenuBtn = document.getElementById('headerMenuBtn');
+const headerMenuList = document.getElementById('headerMenuList');
+
+if (headerMenuBtn && headerMenuList) {
+  headerMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    headerMenuOeffnen(headerMenuList.classList.contains('hidden'));
+  });
+
+  // Nach einer Aktion schließen – sonst verdeckt das Menü die Ansicht, die es
+  // gerade geöffnet hat.
+  headerMenuList.addEventListener('click', () => headerMenuOeffnen(false));
+  document.addEventListener('click', () => headerMenuOeffnen(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') headerMenuOeffnen(false);
+  });
+}
+
+// Erst wenn alle Scripts durch sind: pruefung.js und aktionstag.js hängen ihre
+// Buttons an, nachdem app.js gelaufen ist.
+document.addEventListener('DOMContentLoaded', ordneHeaderEin);
+
     // ============================================
     // SERVICE WORKER & INIT
     // ============================================

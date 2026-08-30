@@ -66,6 +66,14 @@
         <button id="exportBtn" class="btn btn-success btn-icon" title="CSV Export (berücksichtigt aktive Filter)">💾</button>
         <button id="adminBtn" class="btn btn-secondary btn-icon hidden" title="Nutzerverwaltung">👥</button>
         <button id="logoutBtn" class="btn btn-secondary btn-icon" title="Abmelden">🚪</button>
+        <!-- Alles, was nicht in HEADER_PRIMAER (app.js) steht, wird beim Start
+             hierher verschoben - auch die Buttons, die pruefung.js und
+             aktionstag.js erst zur Laufzeit anhaengen. -->
+        <div class="header-menu" id="headerMenu">
+          <button id="headerMenuBtn" class="btn btn-secondary btn-icon"
+                  title="Weitere Aktionen" aria-haspopup="true" aria-expanded="false">⋯</button>
+          <div class="header-menu-list hidden" id="headerMenuList"></div>
+        </div>
       </div>
     </div>
   </header>

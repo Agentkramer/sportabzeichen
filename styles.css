@@ -38,6 +38,9 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      /* Ohne min-width: 0 darf ein Flex-Element nicht unter seine Inhaltsbreite
+         schrumpfen - der Text haette die Button-Leiste weiter hinausgedraengt. */
+      min-width: 0;
     }
 
     .logo-icon {
@@ -51,9 +54,16 @@
       font-size: 1.25rem;
     }
 
+    .logo-text {
+      min-width: 0;
+    }
+
     .logo-text h1 {
       font-size: 1.1rem;
       font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .logo-text p {
@@ -61,9 +71,75 @@
       color: #94a3b8;
     }
 
+    /* Auf sehr schmalen Geraeten weicht zuerst die Unterzeile, dann der Titel -
+       die Buttons sind wichtiger als die Beschriftung. */
+    @media (max-width: 400px) {
+      .logo-text p { display: none; }
+    }
+
+    @media (max-width: 340px) {
+      .logo-text { display: none; }
+    }
+
     .header-actions {
       display: flex;
       gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* Ueberlaufmenue im Header (⋯). Die Icon-Leiste passte auf einem 375px
+       breiten Display nicht mehr - die zuletzt angehaengten Buttons (Pruefen,
+       Aktionstag) lagen komplett ausserhalb des Bildschirms. */
+    .header-menu {
+      position: relative;
+    }
+
+    .header-menu-list {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      min-width: 220px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      padding: 0.35rem;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    /* Ueberschreibt .btn/.btn-icon fuer die Eintraege im Menue: dort sind es
+       keine quadratischen Icons mehr, sondern Zeilen mit Beschriftung. */
+    /* Zwei Klassen im Selektor, damit diese Regeln die .btn-/.btn-success-
+       Angaben weiter unten schlagen - im Menue soll auch der gruene
+       Export-Button eine schlichte Zeile sein. */
+    .header-menu-list .header-menu-item {
+      width: 100%;
+      min-width: 0;
+      justify-content: flex-start;
+      gap: 0.65rem;
+      padding: 0.7rem 0.75rem;
+      /* Mindestgröße für eine Bedienung mit dem Finger. */
+      min-height: 44px;
+      background: transparent;
+      color: #e2e8f0;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .header-menu-list .header-menu-item:hover,
+    .header-menu-list .header-menu-item:active {
+      background: #334155;
+    }
+
+    .header-menu-icon {
+      font-size: 1.1rem;
+      line-height: 1;
+      width: 1.5rem;
+      text-align: center;
+      flex-shrink: 0;
     }
 
     .btn {

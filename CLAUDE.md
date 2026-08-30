@@ -135,6 +135,28 @@ Formular, in dieser Ansicht und in der Export-Spalte „Auffälligkeiten".
 Entfernen wie beim Aktionstag-Modul: Script-Zeile in `index.html`, Datei,
 `urlsToCache` in `sw.js`.
 
+## Header-Leiste und ⋯-Menü
+
+Neben dem Logo ist auf einem 375px breiten Display nur Platz für drei Buttons.
+Vorher brauchte die Leiste 458px (als Examiner) bzw. 510px (als Admin) – die
+zuletzt angehängten Buttons lagen **komplett außerhalb des Bildschirms**, und
+das waren ausgerechnet 🔎 Prüfen und 🏆 Aktionstag, weil die Module ihre
+Buttons zur Laufzeit ans Ende hängen.
+
+Sichtbar bleibt jetzt nur, was im Unterricht gebraucht wird; alles andere
+wandert beim Start ins ⋯-Menü. Gesteuert über `HEADER_PRIMAER` in `app.js` –
+eine Liste von Button-IDs. Alles, was nicht darin steht, landet automatisch im
+Menü, **auch Buttons, die ein Modul erst später anhängt**. Das hält die Module
+entfernbar: Fehlt eine ID, weil das Modul gelöscht wurde, passiert nichts; ein
+künftiges Modul landet ohne Zutun im Menü. Die Beschriftung im Menü kommt aus
+dem `title`-Attribut des Buttons (Klammerzusätze werden abgeschnitten) – die
+Module müssen vom Menü also nichts wissen.
+
+Das Menü liegt bewusst **innerhalb** von `#headerActions`, damit das
+`classList.add('hidden')` der Module weiterhin die ganze Leiste ausblendet.
+Auf sehr schmalen Geräten weicht zuerst die Unterzeile „Auswertung 2026"
+(unter 400px), dann der Titel (unter 340px) – die Buttons sind wichtiger.
+
 ## Voreingestellte Übungen
 
 Am Aktionstag und beim Sportfest machen alle Kinder dieselben Disziplinen –
