@@ -135,6 +135,61 @@ Formular, in dieser Ansicht und in der Export-Spalte „Auffälligkeiten".
 Entfernen wie beim Aktionstag-Modul: Script-Zeile in `index.html`, Datei,
 `urlsToCache` in `sw.js`.
 
+## Sammelerfassung (`sammelerfassung.js`)
+
+Eine Sportstunde nimmt **eine** Disziplin bei **einer** Klasse ab. Statt 28-mal
+eine Karte zu öffnen, zeigt die Sammelerfassung alle Kinder der Klasse mit einem
+Eingabefeld für genau diese Übung. Einstieg über den Knopf „📋 Sammelerfassung ·
+6b“ in der Listenansicht (nur aktiv, wenn oben eine Klasse gefiltert ist),
+verlassen über ✕ – dasselbe Muster wie 🔎 Prüfen und 🏆 Jahrgangsbeste. Die
+Klassenansicht bleibt unverändert; für einzelne Kinder, für Korrekturen an
+mehreren Disziplinen und für Stammdaten ist weiterhin das Einzelformular da.
+
+**Geschrieben wird ausschließlich über `set_result`** (`sql/011_sammelerfassung_rpc.sql`,
+im Supabase-Editor auszuführen). Die Funktion ändert nur eine Disziplingruppe
+innerhalb von `results` – Klasse, `external_id` und die drei anderen Gruppen kann
+diese Ansicht damit gar nicht beschädigen. Drei Eigenschaften der Funktion sind
+nicht verhandelbar: `security invoker` (die RLS des Aufrufers gilt weiter,
+`security definer` wäre ein Loch), die Prüfung des Gruppennamens (sonst ließen
+sich beliebige JSON-Schlüssel schreiben) und `if not found` – ein von RLS
+blockiertes UPDATE trifft null Zeilen und sähe sonst in der App wie Erfolg aus.
+
+Regeln der Ansicht:
+- **Gespeichert wird pro Feld** beim Verlassen, mit ✓ in der Zeile. Kein
+  Sammel-Speichern, an dem eine ganze Stunde hängt, wenn das Netz wegbricht.
+  Ein Fehlschlag wird in der Zeile rot angezeigt und der Wert bleibt stehen.
+  **Einen Offline-Puffer gibt es bewusst nicht.**
+- **Die Übung wird aus dem Bestand vorbelegt** (häufigste bereits erfasste Übung
+  dieser Klasse und Gruppe), erst danach greift `STANDARD_UEBUNGEN`.
+- **Vorhandene Werte werden nie automatisch überschrieben.** Gleiche Übung =
+  Korrektur, erlaubt. Andere Übung = Zeile gesperrt, bis „Ersetzen“ bestätigt
+  wird. Ein Übungswechsel mitten in der Stunde löscht also nichts.
+- **Die Prüfregel ist dieselbe wie im Formular.** Achtung: `pruefeLeistung`
+  liefert den Korrekturvorschlag *zusammen mit* `status: 'fehler'` – erst
+  korrigieren, dann urteilen, sonst geht `3,47 → 3:47` verloren.
+  Warnungen (unplausible Werte) blockieren hier **nicht** und werden nur
+  markiert – eine Rückfrage pro Zeile wäre bei 28 Kindern unbenutzbar.
+- **Zielwerte auf zwei Wegen:** aufklappbarer Block über der Liste (zeigt nur
+  die Alters-/Geschlechtskombinationen dieser Klasse) und ein Tipp auf den
+  Namen für ein einzelnes Kind.
+- **Gerätturnen ist keine eigene Disziplin,** sondern eine Übung in Kraft,
+  Schnelligkeit und Koordination (nicht in Ausdauer). Eingabe über vier Knöpfe
+  0–3 statt Tastatur; nochmal dieselbe Zahl nimmt die Bewertung zurück. Das
+  **Gerät hängt an der Altersgruppe**, nicht am Geschlecht – in einer 6. Klasse
+  turnen die 11-Jährigen bei Kraft am Barren, die 12/13-Jährigen am Reck.
+  Deshalb werden die Zeilen dort nach Gerät gruppiert.
+- **Ob eine Übung für ein Kind existiert, wird nachgesehen, nicht abgeleitet:**
+  steht der Schlüssel in `PERFORMANCE_DATA[gender][ageGroup][gruppe]`? Fehlt er
+  (Schlagball 80g bei Jungen ab 12), bekommt nur diese Zeile ein eigenes
+  Übungs-Dropdown. Automatisch umbuchen wäre falsch – ein 80g-Ball ist nicht
+  mit einem 200g-Ball vergleichbar.
+
+**Bewusst als entfernbares Modul angelegt:** Entfernen = Script-Zeile in
+`index.html` löschen, `sammelerfassung.js` löschen, Eintrag aus `urlsToCache`
+in `sw.js` entfernen – und diesen Abschnitt. Die Datenbankfunktion kann bleiben,
+sie stört nicht. Einzige Abhängigkeit vom Aufbau der `index.html`: der Knopf
+wird vor `#participantCount` eingehängt.
+
 ## Header-Leiste und ⋯-Menü
 
 Neben dem Logo ist auf einem 375px breiten Display nur Platz für drei Buttons.
