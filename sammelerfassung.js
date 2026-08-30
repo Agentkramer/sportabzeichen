@@ -280,6 +280,8 @@
       color: #94a3b8;
       padding-top: 0.35rem;
     }
+    .se-bewertung { color: #e2e8f0; font-size: 0.75rem; }
+
     .se-ersetzen button {
       border: 1px solid #475569;
       background: transparent;
@@ -482,6 +484,22 @@
         && !zustand.frei[kind.id];
   }
 
+  // Einzeldisziplin: 1/2/3 Punkte entsprechen Bronze/Silber/Gold.
+  const MEDAILLEN = { 1: '🥉 Bronze', 2: '🥈 Silber', 3: '🥇 Gold' };
+
+  function punkteText(punkte) {
+    if (punkte === null || punkte === undefined) return '';
+    if (punkte === 0) return '0 Punkte';
+    return `${MEDAILLEN[punkte]} · ${punkte} ${punkte === 1 ? 'Punkt' : 'Punkte'}`;
+  }
+
+  // Kurzform für die Unterzeile einer normalen Eingabezeile
+  function punkteKurz(punkte) {
+    if (punkte === null || punkte === undefined) return '';
+    const symbol = punkte === 0 ? '' : MEDAILLEN[punkte].split(' ')[0] + ' ';
+    return `${symbol}${punkte} Pkt`;
+  }
+
   function einheitText(wert, exercise) {
     if (exercise.unit === 'min:sec') return String(wert);
     return `${String(wert).replace('.', ',')} ${exercise.unit}`;
@@ -569,16 +587,26 @@
     // Konflikt: andere Übung gespeichert. Gesperrt bis zum ausdrücklichen Ersetzen.
     if (hatKonflikt(kind)) {
       const alt = kind.results[zustand.gruppe];
+      // Was der gespeicherte Wert wert IST, entscheidet darüber, ob man ihn
+      // ersetzen will. Dafür die Übung nachschlagen, die dort steht - nicht
+      // die gerade ausgewählte.
+      const altExercise = uebungFuer(kind, zustand.gruppe, alt.exercise);
+      const altWert = altExercise ? einheitText(alt.value, altExercise) : alt.value;
+      const altPunkte = altExercise ? calculatePoints(alt.value, altExercise) : null;
+      const bewertung = altExercise
+        ? punkteText(altPunkte)
+        : 'Punkte nicht berechenbar (Übung fehlt in der Tabelle)';
+
       return `
         <div class="se-zeile gesperrt markiert" data-id="${kind.id}">
           <div class="se-wer">
             ${kopf}
-            <div class="se-sub">🔒 ${esc(uebungsName(alt.exercise))} · ${esc(alt.value)}</div>
+            <div class="se-sub">🔒 ${esc(uebungsName(alt.exercise))} · ${esc(altWert)}</div>
           </div>
           <div class="se-platzhalter">—</div>
           <div class="se-status"></div>
           <div class="se-ersetzen">
-            <span>Andere Übung gespeichert</span>
+            <span class="se-bewertung">${esc(bewertung)}</span>
             <button type="button" data-ersetzen="${kind.id}">Ersetzen</button>
           </div>
         </div>`;
@@ -612,7 +640,7 @@
     const abweichend = !!zustand.override[kind.id];
     const geraet = exercise.type === 'turnen' ? ` · 🤸 ${esc(exercise.geraet)}` : '';
     const sub = `<div class="se-sub">${alter} J.${geraet}${abweichend ? ' · ' + esc(uebungsName(uebungKey)) : ''}`
-      + (punkte !== null ? `<span class="pkt"> · ${punkte} Pkt</span>` : '')
+      + (punkte !== null ? `<span class="pkt"> · ${esc(punkteKurz(punkte))}</span>` : '')
       + `</div>`;
 
     // Gerätturnen wird bewertet, nicht gemessen: vier Knöpfe statt Tastatur.
@@ -744,7 +772,7 @@
 
     const span = document.createElement('span');
     span.className = 'pkt';
-    span.textContent = ` · ${calculatePoints(roh, exercise)} Pkt`;
+    span.textContent = ` · ${punkteKurz(calculatePoints(roh, exercise))}`;
     sub.appendChild(span);
   }
 

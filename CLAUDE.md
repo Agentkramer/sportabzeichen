@@ -164,6 +164,10 @@ Regeln der Ansicht:
 - **Vorhandene Werte werden nie automatisch überschrieben.** Gleiche Übung =
   Korrektur, erlaubt. Andere Übung = Zeile gesperrt, bis „Ersetzen“ bestätigt
   wird. Ein Übungswechsel mitten in der Stunde löscht also nichts.
+  Die gesperrte Zeile zeigt **nicht nur den alten Wert, sondern auch die damit
+  erreichte Medaille** – ohne die lässt sich nicht entscheiden, ob ein Ersetzen
+  überhaupt lohnt. Berechnet wird sie mit der *gespeicherten* Übung, nicht mit
+  der gerade ausgewählten.
 - **Die Prüfregel ist dieselbe wie im Formular.** Achtung: `pruefeLeistung`
   liefert den Korrekturvorschlag *zusammen mit* `status: 'fehler'` – erst
   korrigieren, dann urteilen, sonst geht `3,47 → 3:47` verloren.
