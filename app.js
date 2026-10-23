@@ -987,6 +987,30 @@ filterSelect.innerHTML = '<option value="">Alle Klassen</option><option value="N
       loginInfo.classList.remove('hidden');
     }
 
+    // ============================================================
+    // ANMELDUNG - und warum es hier keine Registrierung gibt
+    // ============================================================
+    // signInWithPassword ist der einzige Anmeldeweg. Es gibt bewusst
+    // kein signUp() und kein signInWithOtp(): Konten legt die
+    // administrierende Person im Supabase-Dashboard an, Rolle und
+    // Klassen werden danach im Admin-Panel zugewiesen.
+    //
+    // Wichtig: Dass hier kein signUp steht, SPERRT nichts. Der anon-Key
+    // steht im Quelltext (so vorgesehen), also kann jeder direkt
+    // POST /auth/v1/signup aufrufen. Die Sperre liegt an genau EINER
+    // Stelle: im Supabase-Dashboard unter Authentication ist "Allow new
+    // users to sign up" AUS. Mehr gibt es nicht.
+    //
+    // sql/012_registrierung_sperren.sql beschreibt ein zweites Schloss
+    // (Trigger auf auth.users), es ist aber bewusst NICHT ausgefuehrt -
+    // der Preis waeren zwei Schritte beim Anlegen eines Kontos. Dafuer
+    // gilt Abschnitt D dieser Datei: gelegentlich nachsehen, ob der
+    // Schalter noch aus ist und ob ein unbekanntes Konto aufgetaucht
+    // ist. Ein einzelner Schalter faellt lautlos um.
+    //
+    // Wer hier doch eine Registrierung einbaut, muss den Schalter
+    // anfassen - und die Datenschutzerklaerung (Abschnitt 3.4), die
+    // zusichert, dass eine Selbstregistrierung nicht moeglich ist.
     async function handleLogin() {
       const email = loginEmailInput.value.trim();
       const password = loginPasswordInput.value;

@@ -12,7 +12,10 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
 - Vanilla HTML/CSS/JavaScript (kein Framework, bewusste Entscheidung)
 - Supabase (PostgreSQL) als Backend, Zugriff über Supabase-Client/REST-API
 - Hosting: GitHub Pages (nur statische Dateien, kein eigenes Backend)
-- PWA mit Service Worker (aktuell v46 – Version bei jedem Deployment hochzählen,
+- Keine externen Ressourcen: `supabase-js` liegt in `vendor/`, die Schrift in
+  `fonts/`. Kein Build-Schritt, kein `package.json` – siehe Abschnitt
+  „Selbst ausgelieferte Abhängigkeiten" weiter unten.
+- PWA mit Service Worker (aktuell v50 – Version bei jedem Deployment hochzählen,
   sonst greift der Cache nicht neu; hält sich hartnäckig, im Zweifel Hard-Reload
   oder Service Worker in den DevTools abmelden)
 - Keep-Alive gegen die Supabase-Pausierung (Free Tier pausiert nach 7 Tagen
@@ -32,8 +35,12 @@ Leistungen von Schüler*innen (8–19 Jahre) in 4 Disziplingruppen erfassen.
 ## Datenstruktur
 
 Tabelle `participants`:
-- `id`, `external_id`, `first_name`, `last_name`, `birth_year` (ggf. `birth_date`),
+- `id`, `external_id`, `first_name`, `last_name`, `birth_year`,
   `class_name`, `gender`
+- **Nur das Geburtsjahr, kein Geburtsdatum.** Für die Altersgruppe der
+  Leistungstabellen reicht das Jahr; ein `birth_date` gibt es nicht und soll
+  es nicht geben (hier stand früher „ggf. `birth_date`" – das war falsch).
+  Die Datenschutzerklärung sichert das in Abschnitt 3.1 zu.
 - `results` (JSONB): `{ ausdauer: {exercise: "lauf_800", value: "3:45"}, kraft: {...}, ... }`
 - **Wichtig:** Fehlende Disziplinen sind `undefined`, nicht `0` – das ist
   Absicht und wird in der Punktelogik so ausgewertet.
@@ -74,10 +81,83 @@ Tabelle `profiles` (Multi-User, seit Phase 2):
 
 ## Datenschutz
 
-Es werden Schülerdaten verarbeitet (Name, Geburtsdatum/-jahr, Klasse, Geschlecht).
+Es werden Schülerdaten verarbeitet (Name, Geburtsjahr, Klasse, Geschlecht).
 Supabase-Projekt läuft in der EU-Region (Frankfurt) für DSGVO-Konformität.
 Keine Noten oder Gesundheitsdaten im engeren Sinne, aber sensibel genug für
 sorgfältigen Umgang (RLS, keine Klartext-Secrets im Repo).
+
+Seit Oktober 2026 gibt es `impressum.html` und `datenschutz.html` – statische
+Seiten ohne Login, ohne JavaScript, ohne Supabase, mit derselben `styles.css`.
+Verlinkt über einen Footer, der in `index.html` bewusst **außerhalb** von
+`#appContent` steht: läge er darin, wäre er vor dem Login unsichtbar.
+
+**Die Datenschutzerklärung beschreibt den Code, also wird sie mit ihm falsch.**
+Sie zählt die tatsächlichen Datenflüsse abschließend auf und sichert in
+Abschnitt 3.4 ausdrücklich zu, dass es *keine* KI-Verarbeitung, *kein*
+Tracking, *keine* eingebetteten Fremdinhalte, *keine* Selbstregistrierung und
+*keine* Ressourcen von fremden Servern gibt. Jede dieser fünf Zusagen lässt
+sich mit einem einzigen `<script src>` unwahr machen. Was wann mitzuziehen ist,
+steht als Tabelle in der README. Drei Stellen sind die wahrscheinlichsten:
+neues Feld in `participants` → 3.1, neuer `localStorage`-Schlüssel → 7., neue
+externe Ressource oder neuer Dienst → 3.4 und 4.
+
+Bewusst **nicht** in der Erklärung: Aussagen zu Auftragsverarbeitungsverträgen
+und Standardvertragsklauseln. Das klärt Daniel mit der Datenschutzbeauftragten;
+bis dahin steht dort nur die nachprüfbare Tatsache, welche Daten wohin gehen.
+
+## Selbst ausgelieferte Abhängigkeiten
+
+Die Seite lädt nichts von fremden Servern. Vorher hingen in `index.html` ein
+`<link>` auf `fonts.googleapis.com` und ein `<script src>` auf
+`cdn.jsdelivr.net` – beides übertrug bei jedem Aufruf die IP-Adresse an ein
+fremdes Unternehmen, und das Skript war unversioniert (`@supabase/supabase-js@2`),
+holte also jede neue 2.x ungefragt.
+
+- `vendor/supabase-js-2.118.0.js` – das UMD-Bündel, byteweise dasselbe, das die
+  CDN-Zeile zuletzt lieferte (jsDelivr hängt nur einen Kommentarkopf davor).
+  **Version im Dateinamen**, damit ein Update nicht unbemerkt bleiben kann.
+- `fonts/ibm-plex-sans-v23-*.woff2` – zwei Dateien statt acht, weil IBM Plex
+  Sans v23 ein Variable Font ist (eine Datei deckt 100–700 ab, daher
+  `font-weight: 100 700` im `@font-face`). Zusammen 68 KB.
+
+**Kein Build-Schritt, kein `package.json`.** Das war eine Entscheidung gegen
+die naheliegende Lösung (esbuild + `npm run vendor`): ein Bündelungsschritt,
+der vor jedem Deployment laufen muss, ist in einem Projekt ohne jede andere
+Werkzeugkette eine Stolperfalle – GitHub Pages liefert die Datei auch direkt
+aus. Preis: Erneuern geht von Hand. Die Anleitung dafür steht in der README
+(„Fremde Bibliotheken und Schriften erneuern"), inklusive der drei Stellen, an
+denen beim Versionswechsel der Dateiname mitzuziehen ist.
+
+Beim Erneuern des Clients fällt ein Fehler sofort auf: er ist die einzige
+Verbindung zur Datenbank, lädt er nicht, lädt gar nichts.
+
+## Registrierung
+
+Eine Selbstregistrierung ist nicht möglich, und das ist in
+`datenschutz.html` Abschnitt 3.4 zugesichert – es muss also halten. Gesperrt
+wird es aber an **genau einer Stelle**: im Supabase-Dashboard ist „Allow new
+users to sign up" aus. Dass `app.js` kein `signUp()` hat, **sperrt nichts** –
+der anon-Key ist öffentlich, `POST /auth/v1/signup` kann jeder aufrufen.
+Fehlende Oberfläche ist keine Sperre; der Kommentar an `handleLogin()` sagt
+das auch so, damit es niemand verwechselt.
+
+`sql/012_registrierung_sperren.sql` beschreibt ein zweites Schloss (Trigger auf
+`auth.users`, nur Adressen aus `public.erlaubte_accounts` kommen durch) und ist
+**bewusst nicht ausgeführt** – am 23.10.2026 nach Lesen der Datei dagegen
+entschieden, weil Konten anlegen dadurch zwei Schritte hätte. Die Abschnitte A
+bis C sind also ein Vorschlag, kein Bestand. Wer sie doch ausführt, muss diesen
+Abschnitt, die README und den Kommentar an `handleLogin()` mitziehen.
+
+**Der Ersatz dafür ist Abschnitt D in `012`** – und der ist wichtiger geworden,
+nicht unwichtiger: An einem einzelnen Schalter in einer Weboberfläche hängt
+jetzt die ganze Zusage, und so ein Schalter fällt lautlos um. Dieselbe Lehre
+wie beim Keep-Alive. D enthält die Kontenliste, die Abfrage nach nie benutzten
+Konten und den `curl`-Aufruf, der den Schalter von außen prüft, ohne dabei ein
+Konto anlegen zu können (ungültige Adresse). Stand 23.10.2026 geprüft:
+`422 signup_disabled`.
+
+Ein selbst angelegtes Konto bekäme `examiner` ohne Klassen und sähe durch RLS
+keinen einzigen Teilnehmer – es wäre aber da.
 
 ## Stand des Projekts
 

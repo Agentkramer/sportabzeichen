@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f59e0b">
+  <meta name="robots" content="index, follow">
+  <title>Datenschutzerklärung – Deutsches Sportabzeichen</title>
+  <!-- Diese Seite laedt bewusst nichts nach: kein JavaScript, kein
+       Supabase, keine Schrift von fremden Servern. Sie ist ohne Login
+       erreichbar - sonst koennte sie niemand lesen, der sich fragt,
+       was beim Login eigentlich passiert. -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <main class="legal">
+
+    <h1>Datenschutzerklärung</h1>
+
+    <p>
+      Diese Anwendung verarbeitet Daten von Schülerinnen und Schülern. Diese
+      Erklärung beschreibt, welche Daten das sind, wohin sie gehen und wie
+      lange sie bleiben. Sie beschreibt nur, was die Anwendung tatsächlich
+      tut – nicht, was sie tun könnte.
+    </p>
+
+    <!-- ========================================================== -->
+    <h2>1. Verantwortlicher</h2>
+
+    <p>
+      Daniel Kramer<br>
+      Albert-Einstein-Weg 17<br>
+      38350 Helmstedt<br>
+      Deutschland<br>
+      E-Mail: <a href="mailto:tools@danielkramer.eu">tools@danielkramer.eu</a>
+    </p>
+
+    <div class="legal-note">
+      <p>
+        Diese Anwendung ist ein privates, nicht-kommerzielles Projekt und
+        <strong>kein Angebot des Landes Niedersachsen, eines Schulträgers oder
+        einer Schule</strong>. Sie wird einzelnen Lehrkräften zur Verfügung
+        gestellt, um das Deutsche Sportabzeichen auszuwerten.
+      </p>
+    </div>
+
+    <!-- ========================================================== -->
+    <h2>2. Wozu die Anwendung da ist</h2>
+
+    <p>
+      Beim Deutschen Sportabzeichen müssen in vier Disziplingruppen
+      (Ausdauer, Kraft, Schnelligkeit, Koordination) Leistungen erbracht und
+      anhand der offiziellen Leistungstabellen des DOSB in Bronze, Silber
+      oder Gold eingeordnet werden. Diese Einordnung ist vom Alter und vom
+      Geschlecht abhängig und wird bei mehreren hundert Teilnehmenden von
+      Hand schnell fehleranfällig.
+    </p>
+    <p>
+      Die Anwendung nimmt diese Einordnung ab: Die Lehrkraft trägt die
+      gemessene Leistung ein, die Anwendung berechnet daraus die Punkte und
+      zeigt, welche Disziplinen noch fehlen. Mehr tut sie nicht. Es findet
+      keine Leistungsbewertung im Sinne einer Note statt, es werden keine
+      Gesundheitsdaten erhoben, und es werden keine Profile gebildet.
+    </p>
+
+    <!-- ========================================================== -->
+    <h2>3. Welche Daten verarbeitet werden</h2>
+
+    <h3>3.1 Daten der Teilnehmenden</h3>
+
+    <p>In der Datenbank steht zu jeder teilnehmenden Person:</p>
+    <ul>
+      <li>Vorname und Nachname</li>
+      <li><strong>Geburtsjahr</strong> – nur das Jahr, kein vollständiges
+        Geburtsdatum. Für die Leistungstabellen ist die Altersgruppe
+        ausreichend.</li>
+      <li>Klasse</li>
+      <li>Geschlecht (die Leistungstabellen des DOSB unterscheiden hier,
+        gespeichert wird entsprechend „weiblich" oder „maennlich")</li>
+      <li>eine optionale Kennnummer aus der importierten Klassenliste, um
+        beim erneuten Import keine Doppelten anzulegen</li>
+      <li>die erfassten Leistungen: je Disziplingruppe die gewählte Übung
+        und der eingetippte Messwert (zum Beispiel „800m_lauf" und „3:45")</li>
+      <li>Zeitpunkt der letzten Änderung und die <strong>E-Mail-Adresse der
+        Lehrkraft, die zuletzt gespeichert hat</strong></li>
+    </ul>
+
+    <p>
+      Die letzte Angabe hat einen praktischen Grund: Am Aktionstag übertragen
+      mehrere Personen handschriftliche Listen in die Anwendung. Ohne diese
+      Spur ließe sich ein Zahlendreher später nicht mehr zuordnen.
+    </p>
+
+    <h3>3.2 Daten der Lehrkräfte</h3>
+
+    <p>
+      Für den Zugang werden E-Mail-Adresse und Passwort gespeichert; das
+      Passwort nur als nicht zurückrechenbarer Hash. Dazu kommen die Rolle
+      („admin" oder „examiner") und die zugewiesenen Klassen. Die
+      Klassenzuordnung ist der Zugriffsschutz: Eine Lehrkraft mit der Rolle
+      „examiner" sieht ausschließlich die Teilnehmenden ihrer eigenen
+      Klassen, kann nur diese bearbeiten und darf niemanden löschen. Das wird
+      nicht in der Anwendung geprüft, sondern in der Datenbank selbst
+      durchgesetzt (Row Level Security) – es greift also auch dann, wenn
+      jemand die Anwendung umgeht.
+    </p>
+    <p>
+      Supabase speichert als Betreiber der Anmeldung zusätzlich technische
+      Angaben zum Konto, etwa den Zeitpunkt der letzten Anmeldung.
+    </p>
+
+    <h3>3.3 Beim Aufruf der Seite</h3>
+
+    <p>
+      Die Anwendung wird über GitHub Pages ausgeliefert. Beim Abruf jeder
+      Datei entstehen dort serverseitige Protokolle, die typischerweise die
+      IP-Adresse, den Zeitpunkt und die abgerufene Datei enthalten. Diese
+      Protokolle entstehen bei GitHub, nicht bei mir; ich habe keinen Zugriff
+      darauf und werte sie nicht aus.
+    </p>
+
+    <h3>3.4 Was ausdrücklich nicht passiert</h3>
+
+    <ul>
+      <li><strong>Keine KI-Verarbeitung.</strong> Die Anwendung ruft keine
+        KI-Schnittstelle auf. Es gehen keine Namen, keine Leistungen und
+        keine sonstigen Daten an einen Sprachmodell-Anbieter.</li>
+      <li><strong>Kein Tracking, keine Analyse, keine Werbung.</strong> Es
+        sind keine Zählpixel, keine Statistikdienste und keine
+        Werbenetzwerke eingebunden.</li>
+      <li><strong>Keine eingebetteten Fremdinhalte.</strong> Keine Karten,
+        keine Videos, keine Social-Media-Schaltflächen, keine iframes.</li>
+      <li><strong>Keine Weitergabe an Dritte</strong> außer an die unter 4.
+        genannten Dienste, die für den Betrieb nötig sind.</li>
+      <li><strong>Keine Registrierung.</strong> Konten legt ausschließlich
+        die administrierende Person an; eine Selbstregistrierung ist nicht
+        vorgesehen und in der Anmeldeverwaltung abgeschaltet.</li>
+      <li><strong>Keine Daten von fremden Servern.</strong> Die verwendete
+        Programmbibliothek und die Schriftart liegen im Projekt selbst. Beim
+        Aufruf der Seite werden keine Inhalte von Google, von einem
+        Content-Delivery-Netzwerk oder von einem anderen fremden Server
+        geladen.</li>
+    </ul>
+
+    <!-- ========================================================== -->
+    <h2>4. Eingesetzte Dienste</h2>
+
+    <p>Mehr als diese drei sind nicht beteiligt:</p>
+
+    <table class="legal-table">
+      <thead>
+        <tr>
+          <th>Dienst</th>
+          <th>Wofür</th>
+          <th>Welche Daten</th>
+          <th>Ort</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Dienst"><strong>GitHub Pages</strong><br>
+            (GitHub, Inc., USA)</td>
+          <td data-label="Wofür">Ausliefern der Seite</td>
+          <td data-label="Welche Daten">Server-Protokolle beim Abruf,
+            darunter die IP-Adresse</td>
+          <td data-label="Ort">USA</td>
+        </tr>
+        <tr>
+          <td data-label="Dienst"><strong>Supabase</strong></td>
+          <td data-label="Wofür">Datenbank und Anmeldung</td>
+          <td data-label="Welche Daten">alle Daten aus 3.1 und 3.2</td>
+          <td data-label="Ort">EU – Rechenzentrum Frankfurt am Main</td>
+        </tr>
+        <tr>
+          <td data-label="Dienst"><strong>Supabase</strong> (E-Mail-Versand)</td>
+          <td data-label="Wofür">nur die Nachricht „Passwort vergessen"
+            und Einladungen für neue Konten</td>
+          <td data-label="Welche Daten">E-Mail-Adresse der Lehrkraft</td>
+          <td data-label="Ort">siehe oben</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      Es wird kein eigener Mailversand betrieben, es gibt keinen Newsletter
+      und keine Benachrichtigungen. Eine E-Mail entsteht nur, wenn eine
+      Lehrkraft selbst „Passwort vergessen" anklickt oder ein neues Konto
+      eingerichtet wird.
+    </p>
+
+    <h3>Ein Dienst ohne Personenbezug</h3>
+    <p>
+      Das kostenlose Supabase-Angebot stellt eine Datenbank nach sieben Tagen
+      ohne Zugriff ab. Damit das nicht mitten im Schuljahr passiert, ruft ein
+      Zeitplandienst (cron-job.org) täglich eine Funktion der Datenbank auf.
+      Dieser Aufruf überträgt <strong>keine personenbezogenen Daten</strong>:
+      Er sendet einen leeren Inhalt, und die Funktion schreibt lediglich einen
+      Zeitstempel und die <em>Anzahl</em> der Teilnehmenden fort. Namen oder
+      Leistungen sind daran nicht beteiligt und für diesen Dienst auch nicht
+      abrufbar.
+    </p>
+
+    <!-- ========================================================== -->
+    <h2>5. Rechtsgrundlagen</h2>
+
+    <dl>
+      <dt>Erfassen und Auswerten der Leistungen (3.1)</dt>
+      <dd>
+        Art. 6 Abs. 1 Buchstabe e DSGVO – die Verarbeitung ist für die
+        Wahrnehmung einer Aufgabe erforderlich, die im öffentlichen Interesse
+        liegt: die Durchführung und Auswertung des Deutschen Sportabzeichens
+        im Rahmen des Schulsports. Was dabei im Einzelnen zulässig ist,
+        richtet sich nach dem Schul- und Datenschutzrecht des Landes
+        Niedersachsen.
+      </dd>
+
+      <dt>Konten der Lehrkräfte (3.2)</dt>
+      <dd>
+        Art. 6 Abs. 1 Buchstabe e DSGVO. Die Konten dienen keinem eigenen
+        Zweck, sondern sind der Zugriffsschutz für die Daten aus 3.1: ohne
+        Anmeldung gibt die Datenbank nichts heraus.
+      </dd>
+
+      <dt>Server-Protokolle beim Aufruf (3.3)</dt>
+      <dd>
+        Art. 6 Abs. 1 Buchstabe f DSGVO – berechtigtes Interesse am
+        technisch sicheren Betrieb und an der Auslieferung der Seite. Ohne
+        diese Protokolle lässt sich eine Webseite nicht betreiben.
+      </dd>
+
+      <dt>Speicherung im Browser (7.)</dt>
+      <dd>
+        § 25 Abs. 2 Nr. 2 TDDDG – die Speicherung ist unbedingt
+        erforderlich, um den ausdrücklich gewünschten Dienst
+        bereitzustellen. Eine Einwilligung und damit ein Cookie-Banner sind
+        dafür nicht erforderlich, weil keine Daten zu Analyse-,
+        Werbe- oder Wiedererkennungszwecken gespeichert werden.
+      </dd>
+    </dl>
+
+    <!-- ========================================================== -->
+    <h2>6. Speicherdauer</h2>
+
+    <dl>
+      <dt>Daten der Teilnehmenden</dt>
+      <dd>
+        Sie bleiben gespeichert, solange die Auswertung eines Durchgangs
+        läuft, also bis die Urkunden ausgegeben sind, und werden danach
+        gelöscht. <strong>Diese Löschung geschieht von Hand</strong> – in der
+        Anwendung ist keine automatische Frist eingebaut, auf die man sich
+        verlassen könnte. Einzelne Teilnehmende können jederzeit gelöscht
+        werden; das ist der administrierenden Person vorbehalten.
+      </dd>
+
+      <dt>Konten der Lehrkräfte</dt>
+      <dd>
+        Sie bestehen, solange die Lehrkraft mit der Auswertung zu tun hat.
+        Helferkonten für einen einzelnen Aktionstag werden nach der
+        Veranstaltung entfernt. Wird ein Konto gelöscht, verschwinden damit
+        auch Rolle und Klassenzuordnung. Die erfassten Leistungen bleiben
+        bestehen – sie hängen nicht am Konto. Die Angabe, wer zuletzt
+        gespeichert hat (3.1), bleibt als E-Mail-Adresse erhalten, weil sie
+        sonst genau dann verloren wäre, wenn man sie braucht.
+      </dd>
+
+      <dt>Sicherungskopien</dt>
+      <dd>
+        Das kostenlose Supabase-Angebot legt keine automatischen Sicherungen
+        an. Vor größeren Änderungen werden daher von Hand Sicherungen des
+        Datenbestands erstellt. Sie enthalten dieselben Daten wie unter 3.1
+        und werden mit dem jeweiligen Durchgang gelöscht.
+      </dd>
+
+      <dt>Server-Protokolle</dt>
+      <dd>
+        Über die Dauer bei GitHub kann ich keine Angabe machen; ich habe
+        darauf keinen Zugriff und keinen Einfluss.
+      </dd>
+    </dl>
+
+    <!-- ========================================================== -->
+    <h2>7. Speicherung im Browser</h2>
+
+    <p>
+      Es werden <strong>keine Cookies</strong> gesetzt. Gespeichert wird im
+      lokalen Speicher des Browsers, und zwar nur Folgendes:
+    </p>
+
+    <table class="legal-table">
+      <thead>
+        <tr>
+          <th>Eintrag</th>
+          <th>Wofür</th>
+          <th>Wie lange</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-label="Eintrag"><code>sb-…-auth-token</code></td>
+          <td data-label="Wofür">der Anmeldenachweis, damit man nicht bei
+            jedem Seitenaufruf das Passwort eintippen muss</td>
+          <td data-label="Wie lange">bis zum Abmelden oder bis der Nachweis
+            abläuft</td>
+        </tr>
+        <tr>
+          <td data-label="Eintrag"><code>dsa_zuletzt_uebungen</code></td>
+          <td data-label="Wofür">welche Übung je Disziplingruppe zuletzt
+            benutzt wurde, damit das Formular bei der laufenden
+            Veranstaltung nicht jedes Mal neu umgestellt werden muss</td>
+          <td data-label="Wie lange">bis der Browserspeicher geleert wird</td>
+        </tr>
+        <tr>
+          <td data-label="Eintrag"><code>dsa_export_spalten</code></td>
+          <td data-label="Wofür">welche Spalten beim letzten CSV-Export
+            ausgewählt waren</td>
+          <td data-label="Wie lange">bis der Browserspeicher geleert wird</td>
+        </tr>
+        <tr>
+          <td data-label="Eintrag">Zwischenspeicher
+            <code>sportabzeichen-…</code></td>
+          <td data-label="Wofür">die Programmdateien selbst (HTML, Stilangaben,
+            Skripte, Schrift), damit die Anwendung auch in einer Turnhalle
+            ohne Empfang startet. <strong>Hier liegen keine
+            personenbezogenen Daten.</strong></td>
+          <td data-label="Wie lange">bis eine neue Programmversion ihn
+            ersetzt oder der Browserspeicher geleert wird</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      Die beiden <code>dsa_</code>-Einträge und der Zwischenspeicher bleiben
+      auf dem Gerät und werden nicht übertragen. Alle vier Einträge lassen
+      sich jederzeit über die Browsereinstellungen löschen; danach muss man
+      sich erneut anmelden.
+    </p>
+
+    <!-- ========================================================== -->
+    <h2>8. Übermittlung in Drittländer</h2>
+
+    <p>
+      Die Datenbank und die Anmeldung liegen in einem Rechenzentrum in
+      Frankfurt am Main, also innerhalb der EU. Die Namen und Leistungen der
+      Teilnehmenden verlassen die EU durch den normalen Betrieb der
+      Anwendung nicht.
+    </p>
+    <p>
+      Die Seite selbst wird über GitHub Pages ausgeliefert, betrieben von
+      GitHub, Inc. mit Sitz in den USA. Beim Abruf der Seite wird die
+      IP-Adresse des aufrufenden Geräts an dieses Unternehmen übermittelt.
+      Das betrifft nur den Abruf der Programmdateien, nicht die Daten der
+      Teilnehmenden.
+    </p>
+
+    <!-- ========================================================== -->
+    <h2>9. Ihre Rechte</h2>
+
+    <p>
+      Nach der DSGVO stehen Ihnen gegenüber dem oben genannten
+      Verantwortlichen folgende Rechte zu:
+    </p>
+    <ul>
+      <li><strong>Auskunft</strong> darüber, welche Daten zu Ihnen bzw. zu
+        Ihrem Kind gespeichert sind (Art. 15 DSGVO)</li>
+      <li><strong>Berichtigung</strong> falscher Angaben (Art. 16 DSGVO) –
+        bei einem falsch übertragenen Messwert ist das der praktisch
+        häufigste Fall</li>
+      <li><strong>Löschung</strong> (Art. 17 DSGVO)</li>
+      <li><strong>Einschränkung der Verarbeitung</strong> (Art. 18 DSGVO)</li>
+      <li><strong>Datenübertragbarkeit</strong> (Art. 20 DSGVO)</li>
+      <li><strong>Widerspruch</strong> gegen die Verarbeitung
+        (Art. 21 DSGVO)</li>
+    </ul>
+    <p>
+      Eine Nachricht an
+      <a href="mailto:tools@danielkramer.eu">tools@danielkramer.eu</a>
+      genügt. Für die Teilnahme am Sportabzeichen selbst ist weiterhin die
+      Schule zuständig – wenn Ihr Anliegen dort besser aufgehoben ist, sage
+      ich Ihnen das.
+    </p>
+
+    <!-- ========================================================== -->
+    <h2>10. Beschwerderecht</h2>
+
+    <p>
+      Sie können sich jederzeit bei einer Datenschutzaufsichtsbehörde
+      beschweren. Zuständig ist hier:
+    </p>
+    <p>
+      Die Landesbeauftragte für den Datenschutz Niedersachsen<br>
+      Hannover<br>
+      <a href="https://www.lfd.niedersachsen.de" target="_blank"
+         rel="noopener noreferrer">www.lfd.niedersachsen.de</a>
+    </p>
+
+    <!-- ========================================================== -->
+    <h2>11. Stand</h2>
+
+    <p>
+      23. Oktober 2026. Diese Erklärung wird angepasst, wenn sich an der
+      Anwendung etwas ändert, das hier beschrieben ist.
+    </p>
+
+    <a class="legal-back" href="index.html">← Zurück zur Anwendung</a>
+
+  </main>
+
+  <footer class="footer">
+    <p>Deutsches Sportabzeichen – Leistungstabellen gültig ab 2024</p>
+    <p class="footer-links">
+      <a href="impressum.html">Impressum</a> ·
+      <a href="datenschutz.html">Datenschutz</a>
+    </p>
+  </footer>
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sportabzeichen-v49';
+const CACHE_NAME = 'sportabzeichen-v50';
 const urlsToCache = [
   '/sportabzeichen/',
   '/sportabzeichen/index.html',
@@ -8,6 +8,16 @@ const urlsToCache = [
   '/sportabzeichen/pruefung.js',
   '/sportabzeichen/aktionstag.js',
   '/sportabzeichen/sammelerfassung.js',
+  // Rechtstexte: muessen auch offline erreichbar sein, sonst fuehrt der
+  // Footer in der installierten PWA ohne Empfang ins Leere.
+  '/sportabzeichen/impressum.html',
+  '/sportabzeichen/datenschutz.html',
+  // Selbst ausgelieferte Bibliothek (vorher cdn.jsdelivr.net).
+  // Beim Versionswechsel hier den Dateinamen mitziehen.
+  '/sportabzeichen/vendor/supabase-js-2.118.0.js',
+  // Selbst ausgelieferte Schrift (vorher fonts.googleapis.com).
+  '/sportabzeichen/fonts/ibm-plex-sans-v23-latin.woff2',
+  '/sportabzeichen/fonts/ibm-plex-sans-v23-latin-ext.woff2',
 ];
 
 // Installation

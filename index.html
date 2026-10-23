@@ -9,7 +9,8 @@
   <title>Deutsches Sportabzeichen</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230f172a' width='100' height='100' rx='20'/><text x='50' y='65' text-anchor='middle' font-size='50'>🏅</text></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Schrift liegt im Repo (fonts/), @font-face steht in styles.css.
+       Es gibt hier bewusst keinen Link auf fonts.googleapis.com mehr. -->
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -251,15 +252,27 @@
 
   </main>
 
-  <!-- Footer -->
-  <footer class="footer">
-    Deutsches Sportabzeichen – Leistungstabellen gültig ab 2024
-  </footer>
-
   </div> <!-- CLOSES appContent -->
 
-  <!-- Supabase Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Footer: bewusst AUSSERHALB von #appContent.
+       Vorher lag er darin und war damit vor dem Login unsichtbar -
+       genau dort, wo Impressum und Datenschutz am ehesten gesucht
+       werden. Jetzt steht er auf jedem Zustand der Seite. -->
+  <footer class="footer">
+    <p>Deutsches Sportabzeichen – Leistungstabellen gültig ab 2024</p>
+    <p class="footer-links">
+      <a href="impressum.html">Impressum</a> ·
+      <a href="datenschutz.html">Datenschutz</a>
+    </p>
+  </footer>
+
+  <!-- Supabase Client, selbst ausgeliefert statt vom CDN.
+       Die Version steht im Dateinamen; erneuert wird sie nach der
+       Anleitung in der README. Vorher stand hier
+       cdn.jsdelivr.net/npm/@supabase/supabase-js@2 - das hat die
+       IP-Adresse an jsDelivr uebertragen und war ausserdem
+       unversioniert, holte also jede neue 2.x ungefragt. -->
+  <script src="vendor/supabase-js-2.118.0.js"></script>
   <script src="app.js"></script>
   <!-- Prüf-Ansicht für eingetragene Leistungen (Details in pruefung.js) -->
   <script src="pruefung.js"></script>
