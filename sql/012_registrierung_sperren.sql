@@ -7,9 +7,9 @@
 -- Schritten, siehe unten) rechtfertigt den Gewinn nicht, solange der
 -- Dashboard-Schalter sicher aus ist. Die Abschnitte A bis C sind damit
 -- ein BESCHRIEBENER VORSCHLAG, kein Bestand - wer sie spaeter doch
--- ausfuehrt, muss die drei Stellen in der README, in der CLAUDE.md und
--- an handleLogin() in app.js mitziehen, die heute sagen, dass es diese
--- Sperre nicht gibt.
+-- ausfuehrt, muss die Stellen mitziehen, die heute sagen, dass es diese
+-- Sperre nicht gibt: die README, den Kommentar an handleLogin() in app.js
+-- und die lokalen Arbeitsnotizen (nicht im Repo, siehe .gitignore).
 --
 -- WAS DAFUER GILT: Abschnitt D. Ohne das zweite Schloss haengt alles an
 -- einem einzigen Schalter in einer Weboberflaeche, und wenn der umfaellt,

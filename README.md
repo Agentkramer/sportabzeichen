@@ -5,9 +5,15 @@ Sportabzeichens an einer Schule. Vanilla HTML/CSS/JavaScript, Supabase als
 Backend, Hosting über GitHub Pages.
 
 - **Live:** https://agentkramer.github.io/sportabzeichen/
-- **Architektur und Entscheidungen:** [CLAUDE.md](CLAUDE.md)
 - **Datenbankschema:** [`sql/`](sql/) – die Dateien sind Dokumentation, sie
   werden von Hand im Supabase SQL Editor ausgeführt
+
+Die ausführlichen Arbeitsnotizen (Architekturentscheidungen und ihre
+Begründungen) liegen bewusst **nicht** in diesem Repo, sondern nur lokal.
+Das Repo ist öffentlich, weil GitHub Pages auf dem Free-Tarif nur aus
+öffentlichen Repos ausliefert – Account-Namen und Betriebsabläufe gehören
+dort nicht hinein. Die Begründung zu einer einzelnen Entscheidung steht
+jeweils als Kommentar in der betroffenen Datei.
 
 Privates, nicht-kommerzielles Projekt. Kein Angebot des Landes Niedersachsen
 oder einer Schule.

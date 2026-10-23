@@ -8,3 +8,14 @@ backups/
 *zugangsdaten*
 *_accounts.sql
 *.env
+
+# Arbeitsnotizen bleiben lokal (seit 23.10.2026).
+# Das Repo ist oeffentlich und muss es bleiben - GitHub Pages liefert auf
+# dem Free-Tarif nur aus oeffentlichen Repos aus. Die CLAUDE.md nennt aber
+# Account-Namen, Betriebsablaeufe und den schulischen Zusammenhang; das
+# gehoert nicht ins Schaufenster.
+#
+# Die Datei muss im Projektordner LIEGEN BLEIBEN, sonst verliert Claude Code
+# die Projektanweisungen - sie ist hier ignoriert, nicht geloescht.
+# Sicherungskopie: ../DSA-PWA-Zugangsdaten/CLAUDE.md
+CLAUDE.md
