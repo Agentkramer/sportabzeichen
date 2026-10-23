@@ -370,6 +370,15 @@ diesen Abschnitt hier.
   unzuverlässig ist. Zusätzlich live auf GitHub Pages testen.
 - Bei jedem Deployment: Service-Worker-Version hochzählen (Cache-Bump nicht
   vergessen).
-- Das GitHub Personal Access Token liegt im macOS Keychain als
-  maschinenweites Git-Credential (nicht projektspezifisch) – bei
-  Auth-Problemen zuerst dort schauen, nicht in den Projekt-Secrets.
+- **Dieses Repo pusht über SSH** (`git@github.com:Agentkramer/sportabzeichen.git`),
+  seit 23.10.2026. Der Schlüssel `~/.ssh/id_ed25519` meldet sich als
+  `Agentkramer` an und hat Schreibrechte – kein Token, kein Ablaufdatum.
+  Vorher lief es über HTTPS und scheiterte: Im Keychain liegt genau **ein**
+  `github.com`-Eintrag, und zwar für den **anderen** Account
+  (`kramerteacher`, gehört zum Englisch-Tool). Ohne Benutzernamen in der
+  Remote-URL reicht Git diesen Eintrag auch für `Agentkramer`-Repos
+  heraus, und GitHub antwortet mit „Invalid username or token" – was wie
+  ein abgelaufenes Token aussieht, aber ein falscher Account ist.
+  **Diesen Keychain-Eintrag nicht löschen**, das Englisch-Tool hängt dran.
+  `knowtheworld` und `protokoll-tool` stehen noch auf HTTPS unter
+  `Agentkramer` und laufen in dieselbe Falle.
